@@ -1,0 +1,227 @@
+
+
+# 📘 راهنمای جامع Pattern Matching در C#  
+*(از مقدماتی تا سطح متوسط)*  
+
+> ✅ برای ریپوزیتوری آموزش **شیءگرایی (OOP)** در C#  
+> 📅 به‌روزرسانی آخر: 12 نوامبر 2025  
+> 📌 مناسب برای توسعه‌دهندگان سطح مبتدی تا متوسط  
+
+---
+
+## 📚 فهرست مطالب
+
+1. [Pattern Matching چیست؟](#1-pattern-matching-چیست)
+2. [چرا Pattern Matching مفید است؟](#2-چرا-pattern-matching-مفید-است)
+3. [انواع الگوها (Patterns) در C#](#3-انواع-الگوها-patterns-در-c)
+   - [3.1. الگوی نوع (Type Pattern)](#31-الگوی-نوع-type-pattern)
+   - [3.2. الگوی ثابت (Constant Pattern)](#32-الگوی-ثابت-constant-pattern)
+   - [3.3. الگوی var](#33-الگوی-var)
+   - [3.4. الگوی ترکیبی (Relational + Logical Patterns)](#34-الگوی-ترکیبی-relational--logical-patterns)
+4. [استفاده از `is` برای Pattern Matching](#4-استفاده-از-is-برای-pattern-matching)
+5. [استفاده از `switch` برای Pattern Matching](#5-استفاده-از-switch-برای-pattern-matching)
+6. [الگوهای مدرن در C# 8.0 تا C# 12](#6-الگوهای-مدرن-در-c-80-تا-c-12)
+7. [جمع‌بندی و بهترین روش‌ها (Best Practices)](#7-جمع‌بندی-و-بهترین-روش‌ها-best-practices)
+8. [منابع و مراجع معتبر](#8-منابع-و-مراجع-معتبر)
+
+---
+
+## 1. Pattern Matching چیست؟
+
+**Pattern Matching** (تطبیق الگو) یک ویژگی مدرن در C# است که به شما امکان می‌دهد **نوع یک شیء (type)**، **مقدار آن (value)** یا **ساختارش (shape)** را بررسی کنید و بر اساس آن، رفتارهای مختلفی را اجرا نمایید.
+
+به جای استفاده از چندین `if` یا `is`/`as` تکراری، با **Pattern Matching** می‌توانید کد خواناتر، فشرده‌تر و امن‌تری بنویسید.
+
+---
+
+## 2. چرا Pattern Matching مفید است؟
+
+- ✅ **کاهش کدهای تکراری**  
+- ✅ **افزایش خوانایی** با حذف `if (obj is MyClass)` + `(MyClass)obj`  
+- ✅ **ایمنی در زمان کامپایل** (Type-safe)  
+- ✅ **پشتیبانی از منطق پیچیده** بدون نیاز به `if-else`های درهم
+
+---
+
+## 3. انواع الگوها (Patterns) در C#
+
+### 3.1. الگوی نوع (Type Pattern)
+
+نوع شیء را بررسی می‌کند و به‌صورت همزمان آن را **کست (cast)** نیز می‌کند.
+
+```csharp
+object obj = "Hello";
+if (obj is string s)
+{
+    Console.WriteLine(s.Length); // s از نوع string است
+}
+```
+
+> بدون نیاز به `as` یا `(string)obj` دستی!
+
+---
+
+### 3.2. الگوی ثابت (Constant Pattern)
+
+مقدار را با یک مقدار ثابت (مانند عدد، رشته، `null`) مقایسه می‌کند.
+
+```csharp
+object obj = 42;
+if (obj is 42)
+{
+    Console.WriteLine("It's the answer!");
+}
+```
+
+همچنین برای `null`:
+
+```csharp
+if (obj is not null) { ... }
+```
+
+---
+
+### 3.3. الگوی `var`
+
+همیشه موفق می‌شود و مقدار را در یک متغیر جدید قرار می‌دهد (حتی اگر `null` باشد).
+
+```csharp
+object obj = "test";
+if (obj is var x)
+{
+    Console.WriteLine(x); // x = "test"
+}
+```
+
+> معمولاً در ترکیب با الگوهای دیگر استفاده می‌شود.
+
+---
+
+### 3.4. الگوی ترکیبی (Relational + Logical Patterns)
+
+از C# 9.0 به بعد، می‌توانید از عوامل منطقی (`and`, `or`, `not`) و رابطه‌ای (`>`, `<`, `>=`, `<=`) استفاده کنید.
+
+```csharp
+int number = 5;
+if (number is > 0 and < 10)
+{
+    Console.WriteLine("Single-digit positive");
+}
+```
+
+یا:
+
+```csharp
+string? name = GetInput();
+if (name is not null and not "")
+{
+    Console.WriteLine($"Hello, {name}");
+}
+```
+
+---
+
+## 4. استفاده از `is` برای Pattern Matching
+
+کلمه کلیدی `is` در C# 7.0+ قابلیت Pattern Matching را پشتیبانی می‌کند:
+
+```csharp
+if (shape is Circle c)
+{
+    Console.WriteLine($"Radius: {c.Radius}");
+}
+else if (shape is Rectangle r)
+{
+    Console.WriteLine($"Width: {r.Width}");
+}
+```
+
+> قبل از C# 7.0، باید جداگانه `is` و سپس cast می‌کردید. این کار خطای ران‌تایم داشت. اما اکنون **type-safe** و اتماتیک است.
+
+---
+
+## 5. استفاده از `switch` برای Pattern Matching
+
+### `switch` سنتی (قبل از C# 7)
+
+فقط برای **مقادیر ثابت** (مثل `int`, `string`) قابل استفاده بود.
+
+### `switch` مبتنی بر الگو (C# 7+)
+
+اکنون می‌توانید بر اساس **نوع**، **مقدار** و **ویژگی‌ها** تصمیم‌گیری کنید:
+
+```csharp
+void ProcessShape(Shape shape) =>
+    shape switch
+    {
+        Circle c => Console.WriteLine($"Circle with radius {c.Radius}"),
+        Rectangle r when r.Width == r.Height => Console.WriteLine("Square!"),
+        Rectangle r => Console.WriteLine($"Rectangle {r.Width}x{r.Height}"),
+        null => Console.WriteLine("Null shape!"),
+        _ => Console.WriteLine("Unknown shape")
+    };
+```
+
+> 📌 توجه: از C# 8.0 به بعد، **switch expression** (با `=>`) معرفی شد که بسیار خواناتر است.
+
+---
+
+## 6. الگوهای مدرن در C# 8.0 تا C# 12
+
+| نسخه C# | ویژگی جدید |
+|--------|-------------|
+| **C# 7.0** | Type pattern, constant pattern در `is` و `switch` |
+| **C# 8.0** | **Switch expressions**, property patterns (`{ Width: 10 }`) |
+| **C# 9.0** | Relational (`>`, `<`) و Logical (`and`, `or`, `not`) patterns |
+| **C# 10+** | Extended property patterns, list patterns (در C# 11+) |
+
+### مثال Property Pattern (C# 8.0+)
+
+```csharp
+if (shape is Rectangle { Width: 10, Height: 20 })
+{
+    Console.WriteLine("Perfect rectangle!");
+}
+```
+
+### مثال List Pattern (C# 11+)
+
+```csharp
+int[] numbers = { 1, 2, 3 };
+if (numbers is [1, 2, 3])
+{
+    Console.WriteLine("Exact match!");
+}
+```
+
+> برای سطح متوسط در OOP کافی است تا C# 9.0 را پوشش دهید. List patternها بیشتر برای سطح پیشرفته هستند.
+
+---
+
+## 7. جمع‌بندی و بهترین روش‌ها (Best Practices)
+
+✅ **استفاده از `is` برای بررسی‌های ساده**  
+✅ **استفاده از `switch expression` برای تصمیم‌گیری‌های چندشاخه**  
+✅ **ترکیب الگوها با `when` برای شرایط اضافی**  
+❌ **از cast دستی (`(T)obj`) خودداری کنید** — Pattern Matching ایمن‌تر است  
+✅ **الگوهای `not null` را به جای `!= null` به کار ببرید** (خواناتر و مدرن‌تر)
+
+---
+
+## 8. منابع و مراجع معتبر
+
+1. **مستندات رسمی مایکروسافت (Microsoft Learn)**  
+   - [Pattern Matching in C#](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/functional/pattern-matching)  
+   - [Switch Expression](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/switch-expression)  
+   - [C# Version History](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-8#switch-expressions)
+
+2. **کتاب: "C# 10 and .NET 6" – Mark J. Price**  
+   - فصل 7: Working with Patterns and Matching
+
+3. **کتاب: "C# in Depth" – Jon Skeet**  
+   - بخش مربوط به ویژگی‌های تابعی و Pattern Matching
+
+4. **راهنمای رسمی Roslyn (کامپایلر C#)**  
+   - [Pattern Matching Specifications](https://github.com/dotnet/csharplang/blob/main/proposals/patterns.md)
+
+
