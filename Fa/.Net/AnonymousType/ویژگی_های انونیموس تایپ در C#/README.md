@@ -1,37 +1,3 @@
-### USER
-من در حال ساخت یک Repository آموزشی درباره C# هستم و می‌خواهم مبحث «ویژگی‌های Anonymous Type» را به‌صورت یک مقاله آموزشی کامل و استاندارد بنویسی.
-
-موضوع اصلی:
-ویژگی‌های Anonymous Type
-
-از مفاهیم پایه شروع کن و سپس وارد جزئیات فنی و پیشرفته شو.
-
-موارد زیر را پوشش بده:
-- Anonymous Type چه ویژگی‌هایی دارد؟
-- Immutable بودن Anonymous Type
-- Read-only بودن Propertyها
-- آیا Propertyهای Anonymous Type قابل تغییر هستند؟
-- Anonymous Type از دید کامپایلر چگونه ساخته می‌شود؟
-- internal بودن Type
-- sealed بودن Type
-- reference type بودن
-- رابطه با object
-- Equals و GetHashCode
-- ToString
-- Value-based Equality
-- Nested Anonymous Types
-- with expression
-- تفاوت Immutable بودن با Read-only بودن
-- مثال‌های ساده و پیشرفته
-- بررسی رفتار Anonymous Type در Runtime
-
-توضیحات را برای فرد مبتدی قابل فهم بنویس ولی جزئیات فنی را حذف نکن.
-
-مقاله باید دارای فهرست مطالب، لینک داخلی، مثال‌های C#، توضیح مثال‌ها، نکات مهم، اشتباهات رایج، جمع‌بندی و منابع معتبر باشد.
-
-برای بخش‌های فنی از Microsoft Learn و C# Language Specification استفاده کن.
-
-### ASSISTANT
 # ویژگی‌های Anonymous Type در C#
 
 > 📘 **مقاله آموزشی جامع** — از مفاهیم پایه تا جزئیات فنی پیشرفته
