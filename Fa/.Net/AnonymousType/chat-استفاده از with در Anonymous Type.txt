@@ -1,0 +1,465 @@
+### USER
+من در حال ساخت یک Repository آموزشی درباره C# هستم و می‌خواهم مبحث «استفاده از کلمه کلیدی with در Anonymous Type» را به‌صورت یک مقاله آموزشی کامل بنویسی.
+
+موضوع اصلی:
+کلمه کلیدی with در Anonymous Type
+
+مقاله را از سطح مقدماتی شروع کن و تا سطح پیشرفته ادامه بده.
+
+موارد زیر را پوشش بده:
+- with expression چیست؟
+- چرا with به Anonymous Type اضافه شد؟
+- Syntax استفاده از with
+- ایجاد نسخه جدید از Anonymous Type
+- Non-destructive Mutation چیست؟
+- آیا نمونه اصلی تغییر می‌کند؟
+- تفاوت with با تغییر مستقیم Property
+- رابطه with با Immutable بودن
+- مثال‌های ساده
+- مثال‌های چند Property
+- مثال‌های تو در تو در صورت امکان
+- تفاوت Anonymous Type و Record در استفاده از with
+- نسخه C# مورد نیاز
+- اشتباهات رایج
+- نکات مهم
+
+توضیحات را ساده و مرحله‌به‌مرحله بنویس و برای هر مثال نتیجه اجرای کد را نیز توضیح بده.
+
+مقاله باید دارای فهرست مطالب، لینک داخلی، مثال‌های C#، نکات مهم، اشتباهات رایج، جمع‌بندی و منابع معتبر باشد.
+
+برای اطلاعات نسخه‌ای و فنی از Microsoft Learn و مستندات رسمی C# استفاده کن.
+
+### ASSISTANT
+# استفاده از کلمه کلیدی `with` در Anonymous Type در C#
+
+> **مخاطب هدف:** توسعه‌دهندگان C# که با Anonymous Type آشنایی دارند و می‌خواهند با قابلیت `with` در این نوع‌ها آشنا شوند.
+> **پیش‌نیاز:** آشنایی مقدماتی با C#، Anonymous Types و مفاهیم Immutable بودن.
+> **نسخه مورد نیاز:** C# 14 (.NET 9 به بعد)
+
+---
+
+## 📑 فهرست مطالب
+
+1. [مقدمه](#مقدمه)
+2. [`with` expression چیست؟](#with-expression-چیست)
+3. [چرا `with` به Anonymous Type اضافه شد؟](#چرا-with-به-anonymous-type-اضافه-شد)
+4. [Syntax کلی `with`](#syntax-کلی-with)
+5. [Non-destructive Mutation چیست؟](#non-destructive-mutation-چیست)
+6. [آیا نمونه اصلی تغییر می‌کند؟](#آیا-نمونه-اصلی-تغییر-میکند)
+7. [مثال‌های ساده](#مثالهای-ساده)
+8. [مثال چند Property](#مثال-چند-property)
+9. [مثال تو در تو (Nested)](#مثال-تو-در-تو-nested)
+10. [تفاوت `with` با تغییر مستقیم Property](#تفاوت-with-با-تغییر-مستقیم-property)
+11. [رابطه `with` با Immutable بودن](#رابطه-with-با-immutable-بودن)
+12. [تفاوت Anonymous Type و Record در استفاده از `with`](#تفاوت-anonymous-type-و-record-در-استفاده-از-with)
+13. [نسخه C# مورد نیاز](#نسخه-c-مورد-نیاز)
+14. [اشتباهات رایج](#اشتباهات-رایج)
+15. [نکات مهم](#نکات-مهم)
+16. [جمع‌بندی](#جمع‌بندی)
+17. [منابع معتبر](#منابع-معتبر)
+
+---
+
+## مقدمه
+
+تا پیش از C# 14، اگر می‌خواستید یک کپی از یک **Anonymous Type** بسازید و فقط یک یا چند Property آن را تغییر دهید، باید کل آبجکت را از نو می‌ساختید. این کار هم خسته‌کننده بود و هم مستعد خطا. با معرفی `with` برای Anonymous Types در C# 14، این مشکل به شکلی زیبا و خوانا حل شد — درست همان کاری که سال‌ها قبل برای `record`ها انجام شده بود.
+
+در این مقاله، از صفر شروع می‌کنیم و تا مثال‌های پیشرفته و تو در تو پیش می‌رویم.
+
+---
+
+## `with` expression چیست؟
+
+`with` یک **expression** در C# است که به شما اجازه می‌دهد یک **کپی جدید** از یک آبجکت موجود بسازید و در همان لحظه، مقدار یک یا چند Property آن را تغییر دهید. به این عملیات **Non-destructive Mutation** می‌گویند، چون آبجکت اصلی دست‌نخورده باقی می‌ماند.
+
+```csharp
+var copy = original with { PropertyName = newValue };
+```
+
+---
+
+## چرا `with` به Anonymous Type اضافه شد؟
+
+Anonymous Types از همان ابتدا **Immutable** (تغییرناپذیر) طراحی شدند. یعنی بعد از ساخت، هیچ Property آن‌ها قابل تغییر نیست. این ویژگی برای بسیاری از سناریوها عالی است (مثلاً LINQ، کار با داده‌های خواندنی)، اما یک مشکل بزرگ داشت:
+
+> «اگر بخواهم یک کپی از آبجکت بسازم و فقط یک فیلد را عوض کنم، باید همه فیلدها را دوباره بنویسم.»
+
+این کد را ببینید:
+
+```csharp
+var user = new { Name = "Ali", Age = 30, City = "Tehran" };
+
+// قبل از C# 14: باید همه چیز را دوباره بنویسیم
+var olderUser = new { Name = user.Name, Age = 31, City = user.City };
+```
+
+با اضافه شدن `with` در C# 14، این کد به شکل زیر ساده می‌شود:
+
+```csharp
+var olderUser = user with { Age = 31 };
+```
+
+**دلایل اصلی اضافه شدن این قابلیت:**
+
+- کاهش کد تکراری (Boilerplate)
+- حفظ خوانایی کد
+- سازگاری رفتار Anonymous Type با `record`
+- تشویق به نوشتن کد Immutable و ایمن
+
+---
+
+## Syntax کلی `with`
+
+```csharp
+var newObject = existingObject with
+{
+    Property1 = value1,
+    Property2 = value2
+};
+```
+
+- سمت چپ `with`: آبجکت موجود (منبع کپی)
+- داخل `{ }`: فقط Propertyهایی که می‌خواهیم تغییر دهیم
+- نتیجه: یک **آبجکت جدید** از همان نوع Anonymous
+
+---
+
+## Non-destructive Mutation چیست؟
+
+**Non-destructive Mutation** یعنی «تغییر بدون تخریب». به جای اینکه آبجکت موجود را ویرایش کنیم (که در Anonymous Type اصلاً ممکن نیست)، یک کپی از آن می‌سازیم و تغییرات را روی کپی اعمال می‌کنیم.
+
+این مفهوم در برنامه‌نویسی تابعی (Functional Programming) بسیار رایج است و باعث می‌شود:
+
+- کد قابل پیش‌بینی‌تر باشد
+- از Side Effect جلوگیری شود
+- دیباگ کردن ساده‌تر شود
+
+---
+
+## آیا نمونه اصلی تغییر می‌کند؟
+
+**خیر، مطلقاً.** این مهم‌ترین نکته‌ای است که باید به خاطر بسپارید. `with` همیشه یک **نمونه جدید** برمی‌گرداند.
+
+```csharp
+var original = new { Name = "Sara", Age = 25 };
+var modified = original with { Age = 26 };
+
+Console.WriteLine(original.Age); // 25 - دست نخورده
+Console.WriteLine(modified.Age); // 26 - نمونه جدید
+Console.WriteLine(ReferenceEquals(original, modified)); // False
+```
+
+---
+
+## مثال‌های ساده
+
+### مثال ۱: تغییر یک Property
+
+```csharp
+var product = new { Name = "Laptop", Price = 1500m };
+var discounted = product with { Price = 1200m };
+
+Console.WriteLine($"Original: {product.Name} - {product.Price}");
+Console.WriteLine($"Modified: {discounted.Name} - {discounted.Price}");
+```
+
+**خروجی:**
+```
+Original: Laptop - 1500
+Modified: Laptop - 1200
+```
+
+### مثال ۲: تغییر نوع Property (با همان نام)
+
+```csharp
+var point = new { X = 10, Y = 20 };
+var moved = point with { X = 15 };
+
+Console.WriteLine($"Original: ({point.X}, {point.Y})");
+Console.WriteLine($"Moved:    ({moved.X}, {moved.Y})");
+```
+
+**خروجی:**
+```
+Original: (10, 20)
+Moved:    (15, 20)
+```
+
+---
+
+## مثال چند Property
+
+می‌توانید در یک `with` چند Property را هم‌زمان تغییر دهید:
+
+```csharp
+var user = new
+{
+    FirstName = "Reza",
+    LastName = "Ahmadi",
+    Age = 30,
+    City = "Isfahan"
+};
+
+var updatedUser = user with
+{
+    Age = 31,
+    City = "Tehran"
+};
+
+Console.WriteLine($"{updatedUser.FirstName} {updatedUser.LastName}, " +
+                  $"{updatedUser.Age}, {updatedUser.City}");
+```
+
+**خروجی:**
+```
+Reza Ahmadi, 31, Tehran
+```
+
+> 💡 Propertyهایی که در `with` ذکر نمی‌شوند، **دقیقاً با همان مقدار** از آبجکت اصلی کپی می‌شوند.
+
+---
+
+## مثال تو در تو (Nested)
+
+یکی از قابلیت‌های جذاب `with` این است که برای Anonymous Typeهای تو در تو هم کار می‌کند. اما یک نکته مهم دارد:
+
+```csharp
+var address = new { City = "Shiraz", Zip = "71000" };
+var person = new { Name = "Mina", Address = address };
+
+// تغییر یک فیلد از آبجکت داخلی
+var moved = person with { Address = person.Address with { City = "Mashhad" } };
+
+Console.WriteLine($"Original person city: {person.Address.City}");
+Console.WriteLine($"Moved person city:    {moved.Address.City}");
+Console.WriteLine($"Same Address ref?     {ReferenceEquals(person.Address, moved.Address)}");
+```
+
+**خروجی:**
+```
+Original person city: Shiraz
+Moved person city:    Mashhad
+Same Address ref?     False
+```
+
+### ⚠️ نکته مهم در مورد Nested
+
+`with` به‌صورت **Shallow Copy** عمل می‌کند. یعنی اگر یک Property از نوع Reference (مثل یک آبجکت دیگر) باشد، **رفرنس** آن کپی می‌شود نه محتوایش. به همین دلیل در مثال بالا، برای تغییر `City` داخل `Address`، باید برای `Address` هم یک `with` جداگانه بنویسیم.
+
+```csharp
+// ❌ اشتباه: اگر این کار را نکنیم، Address هر دو آبجکت یکی است
+var wrong = person with { Name = "NewName" };
+// در اینجا wrong.Address همان person.Address است!
+```
+
+---
+
+## تفاوت `with` با تغییر مستقیم Property
+
+| ویژگی | تغییر مستقیم | استفاده از `with` |
+|---|---|---|
+| تغییر آبجکت اصلی | ✅ بله | ❌ خیر |
+| کار با Immutable | ❌ ممکن نیست | ✅ ممکن است |
+| ایجاد نمونه جدید | ❌ خیر | ✅ بله |
+| مناسب برای Anonymous Type | ❌ خیر | ✅ بله |
+
+مثال مقایسه‌ای:
+
+```csharp
+// ❌ این کد حتی کامپایل نمی‌شود، چون Anonymous Type Immutable است
+var p = new { Name = "Ali" };
+p.Name = "Reza"; // Error CS0200
+
+// ✅ راه درست: استفاده از with
+var p2 = p with { Name = "Reza" };
+```
+
+---
+
+## رابطه `with` با Immutable بودن
+
+Anonymous Typeها **Immutable** هستند. یعنی:
+
+- Propertyها فقط `get` دارند (نه `set`)
+- بعد از ساخت، نمی‌توان مقدارشان را تغییر داد
+
+`with` دقیقاً برای همین طراحی شده: **راهی برای «تغییر» بدون نقض Immutable بودن**. به جای شکستن قانون Immutable، یک نمونه جدید می‌سازیم.
+
+این الگو در برنامه‌نویسی مدرن بسیار ارزشمند است چون:
+
+- از **Race Condition** در محیط‌های چندنخی جلوگیری می‌کند
+- کد را **Thread-safe** می‌کند
+- **Reasoning** درباره کد را ساده می‌کند
+
+---
+
+## تفاوت Anonymous Type و Record در استفاده از `with`
+
+هر دو از `with` پشتیبانی می‌کنند، اما تفاوت‌هایی دارند:
+
+| ویژگی | Anonymous Type | Record |
+|---|---|---|
+| نام نوع | توسط کامپایلر تولید می‌شود | توسط شما تعیین می‌شود |
+| قابل استفاده در امضای متد | ❌ خیر | ✅ بله |
+| `with` expression | ✅ از C# 14 | ✅ از C# 9 |
+| قابلیت `init` property | ❌ خیر | ✅ بله |
+| Equality بر اساس مقدار | ✅ بله | ✅ بله |
+
+مثال مقایسه:
+
+```csharp
+// Anonymous Type
+var a1 = new { Name = "A", Value = 1 };
+var a2 = a1 with { Value = 2 };
+
+// Record
+record Person(string Name, int Age);
+var r1 = new Person("A", 1);
+var r2 = r1 with { Age = 2 };
+```
+
+**قانون کلی:** اگر نوع را فقط در یک متد استفاده می‌کنید → Anonymous Type. اگر نیاز به انتقال بین متدها یا لایه‌ها دارید → `record`.
+
+---
+
+## نسخه C# مورد نیاز
+
+- **`with` برای `record`**: از **C# 9** (.NET 5)
+- **`with` برای `Anonymous Type`**: از **C# 14** (.NET 9)
+
+برای استفاده از این قابلیت در پروژه خود:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>14</LangVersion> <!-- یا latest -->
+  </PropertyGroup>
+</Project>
+```
+
+اگر از نسخه قدیمی‌تر استفاده می‌کنید، کامپایلر خطای `CS8059` یا مشابه آن را می‌دهد.
+
+---
+
+## اشتباهات رایج
+
+### ❌ اشتباه ۱: فکر کردن به اینکه `with` آبجکت اصلی را تغییر می‌دهد
+
+```csharp
+var user = new { Name = "Ali", Age = 30 };
+user with { Age = 31 }; // ❌ این خط هیچ اثری ندارد!
+
+Console.WriteLine(user.Age); // هنوز 30 است
+```
+
+✅ **راه درست:**
+```csharp
+var user = new { Name = "Ali", Age = 30 };
+user = user with { Age = 31 }; // ✅
+```
+
+### ❌ اشتباه ۲: انتظار Deep Copy در Nested
+
+```csharp
+var inner = new { Value = 1 };
+var outer = new { Inner = inner };
+var copy = outer with { }; // فقط Shallow Copy!
+
+Console.WriteLine(ReferenceEquals(outer.Inner, copy.Inner)); // True!
+```
+
+✅ **راه درست:** برای تغییرات عمیق، باید برای هر لایه `with` بنویسید.
+
+### ❌ اشتباه ۳: استفاده در C# 13 یا قدیمی‌تر
+
+```csharp
+var x = new { A = 1 };
+var y = x with { A = 2 }; // ❌ در C# 13 کامپایل نمی‌شود
+```
+
+### ❌ اشتباه ۴: تلاش برای افزودن Property جدید با `with`
+
+```csharp
+var p = new { Name = "Ali" };
+var p2 = p with { Age = 30 }; // ❌ Error: Age در نوع اصلی وجود ندارد
+```
+
+`with` فقط می‌تواند Propertyهای **موجود** را تغییر دهد، نه Property جدید اضافه کند.
+
+### ❌ اشتباه ۵: استفاده از `with` روی نوع‌های معمولی (class/struct)
+
+```csharp
+class Person { public string Name { get; set; } }
+var p = new Person { Name = "Ali" };
+var p2 = p with { Name = "Reza" }; // ❌ فقط برای record و anonymous type کار می‌کند
+```
+
+---
+
+## نکات مهم
+
+1. ✅ `with` همیشه یک **نمونه جدید** برمی‌گرداند.
+2. ✅ آبجکت اصلی **هرگز تغییر نمی‌کند**.
+3. ✅ کپی از نوع **Shallow Copy** است؛ برای Nested باید دقت کنید.
+4. ✅ فقط Propertyهای **موجود** در نوع را می‌توان تغییر داد.
+5. ✅ این قابلیت به **C# 14** (.NET 9) نیاز دارد.
+6. ✅ برای تغییر چند Property، همه را در یک `with` بنویسید (کد تمیزتر می‌شود).
+7. ✅ در LINQ می‌توانید به‌راحتی از `with` استفاده کنید:
+
+```csharp
+var users = new[]
+{
+    new { Name = "Ali", Age = 30 },
+    new { Name = "Sara", Age = 25 }
+};
+
+var nextYear = users.Select(u => u with { Age = u.Age + 1 });
+```
+
+8. ✅ `with` با `Equals` و `GetHashCode` Anonymous Type سازگار است، چون این نوع‌ها Equality را بر اساس مقدار پیاده می‌کنند:
+
+```csharp
+var a = new { X = 1, Y = 2 };
+var b = new { X = 1, Y = 2 };
+var c = a with { }; // کپی دقیق
+
+Console.WriteLine(a.Equals(b)); // True
+Console.WriteLine(a.Equals(c)); // True
+```
+
+---
+
+## جمع‌بندی
+
+کلمه کلیدی `with` در C# 14، یک پیشرفت طبیعی و بسیار کاربردی برای Anonymous Typeهاست. این قابلیت:
+
+- کد را **کوتاه‌تر** و **خواناتر** می‌کند
+- با فلسفه **Immutable بودن** Anonymous Type هم‌خوان است
+- الگوی **Non-destructive Mutation** را ممکن می‌سازد
+- تجربه توسعه‌دهنده را به `record`ها نزدیک می‌کند
+
+**قانون طلایی:** هرگاه یک Anonymous Type دارید و می‌خواهید نسخه‌ای از آن با یک یا چند Property متفاوت بسازید، به جای نوشتن مجدد همه Propertyها، از `with` استفاده کنید.
+
+```csharp
+// ❌ قدیمی
+var newUser = new { Name = user.Name, Age = user.Age + 1, City = user.City };
+
+// ✅ مدرن
+var newUser = user with { Age = user.Age + 1 };
+```
+
+---
+
+## منابع معتبر
+
+1. 🔗 [Microsoft Learn — Anonymous types (C# Programming Guide)](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/anonymous-types)
+2. 🔗 [Microsoft Learn — Record types (C# reference)](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/record)
+3. 🔗 [Microsoft Learn — What's new in C# 14](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-14)
+4. 🔗 [GitHub — dotnet/csharplang proposals (with-expression for anonymous types)](https://github.com/dotnet/csharplang)
+5. 🔗 [Microsoft Learn — Non-destructive mutation](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/with-expression)
+
+---
+
+> 📌 **پیشنهاد:** این مقاله را در کنار یک پروژه عملی تمرین کنید. سعی کنید یک LINQ Query بنویسید که با استفاده از `with`، چند Anonymous Type را به شکل‌های مختلف تغییر دهد. این بهترین راه برای تسلط بر این قابلیت است.

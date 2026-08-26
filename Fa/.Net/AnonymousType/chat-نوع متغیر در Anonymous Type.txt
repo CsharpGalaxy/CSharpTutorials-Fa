@@ -1,0 +1,297 @@
+### USER
+من در حال ساخت یک Repository آموزشی درباره C# هستم و می‌خواهم مبحث «نوع متغیر در Anonymous Type» را به‌صورت یک مقاله آموزشی کامل و استاندارد برای Repository بنویسی.
+
+موضوع اصلی:
+نوع متغیر در Anonymous Type
+
+مطلب را از سطح مقدماتی شروع کن و تا نکات پیشرفته ادامه بده.
+
+موارد زیر را پوشش بده:
+- چرا Anonymous Type معمولاً با var تعریف می‌شود؟
+- رابطه var و Anonymous Type
+- آیا می‌توان Anonymous Type را با object ذخیره کرد؟
+- آیا می‌توان Anonymous Type را با dynamic ذخیره کرد؟
+- تفاوت var، object و dynamic در این سناریو
+- مزایا و معایب هر روش
+- Type Inference چیست؟
+- کامپایلر چگونه نوع واقعی متغیر را تشخیص می‌دهد؟
+- چرا نمی‌توان نام واقعی Anonymous Type را نوشت؟
+- مثال‌های ساده
+- مثال‌های مقایسه‌ای
+- اشتباهات رایج
+- نکات حرفه‌ای
+
+برای هر مورد مثال C# ارائه بده.
+
+مقاله باید دارای فهرست مطالب، لینک داخلی، مثال، توضیح خط‌به‌خط، نکات مهم، اشتباهات رایج، جمع‌بندی و منابع معتبر باشد.
+
+منابع اصلی:
+Microsoft Learn و C# Language Specification.
+
+لینک مستقیم منابع را در انتهای مقاله قرار بده.
+
+### ASSISTANT
+سلام! این یک مقاله آموزشی جامع، استاندارد و ساختاریافته است که دقیقاً برای قرار گرفتن در یک Repository آموزشی گیت‌هاب (به عنوان فایل Markdown) طراحی شده است. لحن مقاله حرفه‌ای، آموزشی و روان است و تمام موارد درخواستی شما را پوشش می‌دهد.
+
+***
+
+# 📘 آموزش جامع: نوع متغیر در Anonymous Type و کلیدواژه var در C#
+
+به مستندات آموزشی این Repository خوش آمدید! در این مقاله، یکی از جذاب‌ترین و در عین حال چالش‌برانگیزترین مفاهیم C#، یعنی **Anonymous Types** (انواع گمنام) و رابطه تنگاتنگ آن‌ها با کلیدواژه **`var`** را از صفر تا صد بررسی می‌کنیم.
+
+---
+
+## 📑 فهرست مطالب
+1. [مقدمه](#مقدمه)
+2. [Type Inference (استنتاج نوع) چیست؟](#type-inference-استنتاج-نوع-چیست)
+3. [کامپایلر چگونه نوع واقعی متغیر را تشخیص می‌دهد؟](#کامپایلر-چگونه-نوع-واقعی-متغیر-را-تشخیص-میدهد)
+4. [رابطه var و Anonymous Type](#رابطه-var-و-anonymous-type)
+5. [چرا نمی‌توان نام واقعی Anonymous Type را نوشت؟](#چرا-نمیتوان-نام-واقعی-anonymous-type-را-نوشت)
+6. [مثال‌های ساده](#مثالهای-ساده)
+7. [آیا می‌توان Anonymous Type را با object یا dynamic ذخیره کرد؟](#آیا-میتوان-anonymous-type-را-با-object-یا-dynamic-ذخیره-کرد)
+8. [تفاوت var، object و dynamic در این سناریو](#تفاوت-var-object-و-dynamic-در-این-سناریو)
+9. [مثال‌های مقایسه‌ای](#مثالهای-مقایسه‌ای)
+10. [اشتباهات رایج](#اشتباهات-رایج)
+11. [نکات حرفه‌ای (Pro Tips)](#نکات-حرفه‌ای-pro-tips)
+12. [جمع‌بندی](#جمع‌بندی)
+13. [منابع معتبر](#منابع-معتبر)
+
+---
+
+## مقدمه
+در برنامه‌نویسی C#، به‌ویژه هنگام کار با LINQ، اغلب نیاز داریم ساختارهای داده‌ای موقتی و محلی بسازیم که فقط در همان محدوده (Scope) کاربرد دارند. **Anonymous Type** به ما اجازه می‌دهد بدون نیاز به تعریف یک `class` یا `struct` جداگانه، یک شیء با Propertyهای دلخواه بسازیم. اما برای نگهداری این اشیاء، ما به یک نوع متغیر خاص نیاز داریم: **`var`**.
+
+---
+
+## Type Inference (استنتاج نوع) چیست؟
+**Type Inference** یا استنتاج نوع، قابلیتی است که در آن کامپایلر C# بر اساس مقدار سمت راست عملگر انتساب (`=`)، نوع دقیق متغیر را در **زمان کامپایل (Compile-Time)** حدس می‌زند و تعیین می‌کند.
+
+کلیدواژه `var` در C# به معنای "نوع داینامیک" (برخلاف جاوااسکریپت) **نیست**؛ بلکه به کامپایلر می‌گوید: *"خودت نوع این متغیر را از روی مقدار اولیه‌اش تشخیص بده"*.
+
+```csharp
+var number = 10;       // کامپایلر این را int تشخیص می‌دهد
+var text = "Hello";    // کامپایلر این را string تشخیص می‌دهد
+var list = new List<int>(); // کامپایلر این را List<int> تشخیص می‌دهد
+```
+
+---
+
+## کامپایلر چگونه نوع واقعی متغیر را تشخیص می‌دهد؟
+وقتی شما از `var` استفاده می‌کنید، کامپایلر C# مراحل زیر را طی می‌کند:
+1. **بررسی سمت راست:** کامپایلر عبارت سمت راست `=` را ارزیابی می‌کند.
+2. **تعیین نوع:** نوع دقیق آن عبارت را پیدا می‌کند.
+3. **جایگزینی در IL:** در کد میانی (IL - Intermediate Language) که تولید می‌کند، کلمه `var` را با نوع واقعی جایگزین می‌کند.
+
+> 💡 **نکته مهم:** پس از کامپایل، هیچ ردی از `var` در کد نهایی وجود ندارد. `var` فقط یک میانبر نوشتاری (Syntactic Sugar) برای برنامه‌نویس است و **هیچ سربار عملکردی (Performance Overhead)** در زمان اجرا ندارد.
+
+---
+
+## رابطه var و Anonymous Type
+وقتی شما یک Anonymous Type می‌سازید، در واقع یک کلاس بی‌نام در حال تولید است. از آنجایی که این کلاس **نامی در سورس‌کد شما ندارد**، شما **نمی‌توانید** آن را در یک متغیر با نوع صریح (Explicit Type) ذخیره کنید.
+
+```csharp
+// ❌ خطا: چون نامی برای این کلاس وجود ندارد که اینجا بنویسیم
+MyUnknownType person = new { Name = "Ali", Age = 30 }; 
+
+// ✅ صحیح: کامپایلر نوع را استنتاج می‌کند
+var person = new { Name = "Ali", Age = 30 }; 
+```
+بنابراین، `var` و `Anonymous Type` مثل دو نیمه یک سیب هستند. Anonymous Type بدون `var` قابل استفاده نیست.
+
+---
+
+## چرا نمی‌توان نام واقعی Anonymous Type را نوشت؟
+شاید بپرسید *"اگر کامپایلر یک کلاس می‌سازد، پس نامش چیست؟ چرا من نمی‌توانم آن را بنویسم؟"*
+وقتی کامپایلر یک Anonymous Type می‌سازد، نامی شبیه به این برای آن در نظر می‌گیرد:
+`<>f__AnonymousType0<System.String, System.Int32>`
+
+همان‌طور که می‌بینید، این نام شامل کاراکترهای `<` و `>` و `__` است که در C# به عنوان **Identifier (شناسه)** برای نام‌گذاری کلاس‌ها **غیرقانونی** هستند. به همین دلیل، نوشتن نام آن در کد غیرممکن است و ما **مجبور** به استفاده از `var` هستیم.
+
+---
+
+## مثال‌های ساده
+
+```csharp
+// ساخت یک Anonymous Type ساده
+var product = new 
+{ 
+    Id = 101, 
+    Name = "Laptop", 
+    Price = 1200.50 
+};
+
+// دسترسی به Propertyها (با کمک IntelliSense)
+Console.WriteLine(product.Name);  // خروجی: Laptop
+Console.WriteLine(product.Price); // خروجی: 1200.5
+
+// ❌ خطا: Anonymous Typeها Immutable (غیرقابل تغییر) هستند
+// product.Price = 1500; // کامپایل ارور می‌دهد: Property or indexer cannot be assigned to
+```
+**توضیح خط‌به‌خط:**
+* خط 2 تا 6: یک شیء گمنام با سه Property از نوع `int`، `string` و `double` ساخته می‌شود.
+* خط 9 و 10: به دلیل اینکه نوع متغیر در زمان کامپایل کاملاً مشخص است، IntelliSense کار کرده و Propertyها را پیشنهاد می‌دهد.
+* خط 13: کامپایلر برای Anonymous Typeها فقط Propertyهای **Read-Only** تولید می‌کند.
+
+---
+
+## آیا می‌توان Anonymous Type را با object یا dynamic ذخیره کرد؟
+بله، اما **توصیه نمی‌شود** مگر در شرایط بسیار خاص.
+
+### 1. ذخیره در `object`
+از آنجا که تمام کلاس‌های C# در نهایت از `object` ارث‌بری می‌کنند، می‌توانید Anonymous Type را در `object` بریزید. اما در این حالت، **Type Safety** را از دست می‌دهید و برای دسترسی به Propertyها باید از **Reflection** استفاده کنید.
+
+```csharp
+object objProduct = new { Name = "Mouse", Price = 25.0 };
+
+// ❌ خطا: کامپایلر object را نمی‌شناسد که Name دارد
+// Console.WriteLine(objProduct.Name); 
+
+// ✅ راه حل: استفاده از Reflection (کند و پیچیده)
+var type = objProduct.GetType();
+var nameProp = type.GetProperty("Name");
+Console.WriteLine(nameProp.GetValue(objProduct)); // خروجی: Mouse
+```
+
+### 2. ذخیره در `dynamic`
+می‌توانید آن را در `dynamic` ذخیره کنید. در این حالت، بررسی نوع به **زمان اجرا (Runtime)** موکول می‌شود.
+
+```csharp
+dynamic dynProduct = new { Name = "Keyboard", Price = 45.0 };
+
+// ✅ در زمان کامپایل خطا نمی‌دهد، در زمان اجرا مقدار را پیدا می‌کند
+Console.WriteLine(dynProduct.Name); // خروجی: Keyboard
+
+// ❌ در زمان کامپایل خطا نمی‌دهد، اما در زمان اجرا Crash می‌کند!
+Console.WriteLine(dynProduct.NonExistentProp); // RuntimeBinderException
+```
+
+---
+
+## تفاوت var، object و dynamic در این سناریو
+
+| ویژگی | `var` | `object` | `dynamic` |
+| :--- | :--- | :--- | :--- |
+| **زمان تشخیص نوع** | Compile-Time (کامپایل) | Compile-Time (کامپایل) | **Run-Time (اجرا)** |
+| **Type Safety** | کاملاً ایمن (Strongly Typed) | ضعیف (نیاز به Cast/Reflection) | ضعیف (Weakly Typed) |
+| **پشتیبانی IntelliSense** | ✅ بله | ❌ خیر | ❌ خیر |
+| **سرعت اجرا** | ⚡ بسیار بالا (مستقیم) | 🐢 کند (به دلیل Reflection) | 🐌 کندتر (به دلیل DLR) |
+| **بررسی خطا** | زمان کامپایل | زمان کامپایل | **زمان اجرا** |
+| **کاربرد اصلی** | استفاده محلی و استاندارد | عبور از مرز متدها (قدیمی) | تعامل با زبان‌های داینامیک / COM |
+
+---
+
+## مثال‌های مقایسه‌ای
+
+بیایید یک سناریو را با هر سه روش پیاده‌سازی کنیم تا تفاوت‌ها کاملاً روشن شود:
+
+```csharp
+// 1. روش استاندارد (var)
+var user1 = new { Id = 1, Username = "Admin" };
+Console.WriteLine(user1.Username); // IntelliSense کار می‌کند، سریع و ایمن
+
+// 2. روش object
+object user2 = new { Id = 2, Username = "User" };
+// Console.WriteLine(user2.Username); // خطای کامپایل!
+var prop = user2.GetType().GetProperty("Username");
+Console.WriteLine(prop.GetValue(user2)); // کد شلوغ و کند
+
+// 3. روش dynamic
+dynamic user3 = new { Id = 3, Username = "Guest" };
+Console.WriteLine(user3.Username); // کار می‌کند، اما بدون IntelliSense
+// Console.WriteLine(user3.TypoField); // کامپایلر ساکت است، اما در اجرا برنامه می‌پاشد!
+```
+
+---
+
+## اشتباهات رایج
+
+1. **فکر کردن به `var` به عنوان یک نوع داینامیک:**
+   ```csharp
+   var x = 10;
+   // x = "Hello"; // ❌ خطای کامپایل! var اینجا int است و تغییر نوع نمی‌دهد.
+   ```
+2. **تلاش برای برگرداندن Anonymous Type از یک متد:**
+   شما نمی‌توانید Anonymous Type را به عنوان خروجی یک متد (Return Type) استفاده کنید، زیرا نامی برای نوشتن در امضای متد ندارید.
+   ```csharp
+   // ❌ غیرممکن
+   public ??? GetUser() { return new { Name = "Ali" }; } 
+   ```
+   *(راه‌حل مدرن: در C# 7 به بالا از **Tuples** یا **Records** استفاده کنید).*
+3. **تغییر مقدار Propertyها:**
+   همان‌طور که گفته شد، Anonymous Typeها Immutable هستند.
+
+---
+
+## نکات حرفه‌ای (Pro Tips)
+
+### ۱. آرایه‌ای از Anonymous Types
+شما می‌توانید آرایه‌ای از Anonymous Typeها بسازید، به شرطی که ساختار (نام و نوع Propertyها) در همه عناصر **دقیقاً یکسان** باشد:
+
+```csharp
+var users = new[] 
+{
+    new { Name = "Ali", Age = 30 },
+    new { Name = "Sara", Age = 25 } // نوع و نام Propertyها باید دقیقاً یکی باشد
+};
+
+foreach(var user in users)
+    Console.WriteLine(user.Name);
+```
+
+### ۲. کاربرد اصلی در LINQ (Projection)
+بیشترین کاربرد Anonymous Type در LINQ برای شکل‌دهی به داده‌ها (Projection) است:
+
+```csharp
+var employees = new List<Employee> { /* ... */ };
+
+var report = employees
+    .Where(e => e.Salary > 50000)
+    .Select(e => new 
+    { 
+        FullName = e.FirstName + " " + e.LastName, 
+        e.Salary 
+    });
+```
+
+### ۳. برابری (Equality) در Anonymous Types
+کامپایلر به‌صورت خودکار متدهای `Equals()` و `GetHashCode()` را بر اساس **مقادیر Propertyها** Override می‌کند.
+
+```csharp
+var p1 = new { Name = "Ali", Age = 30 };
+var p2 = new { Name = "Ali", Age = 30 };
+
+Console.WriteLine(p1.Equals(p2)); // ✅ خروجی: True (مقادیر برابرند)
+Console.WriteLine(object.ReferenceEquals(p1, p2)); // ❌ خروجی: False (آدرس‌ها متفاوتند)
+```
+
+---
+
+## جمع‌بندی
+* **Anonymous Type** ابزاری قدرتمند برای ساخت اشیاء موقت، محلی و بدون نیاز به تعریف کلاس است.
+* **`var`** تنها راه برای نگهداری این اشیاء است، زیرا نام آن‌ها در سورس‌کد وجود ندارد.
+* `var` یک متغیر **Strongly Typed** در زمان کامپایل است و هیچ شباهتی به `dynamic` ندارد.
+* هرگز برای ذخیره Anonymous Type از `object` یا `dynamic` استفاده نکنید، مگر اینکه مجبور به عبور دادن آن از مرز متدها باشید (که در C# مدرن بهتر است از Tuples استفاده شود).
+* همواره از `var` برای Anonymous Typeها استفاده کنید تا از مزایای **Type Safety**، **IntelliSense** و **Performance** بهره‌مند شوید.
+
+---
+
+## منابع معتبر
+
+برای مطالعه عمیق‌تر و بررسی دقیق مشخصات زبان، منابع زیر پیشنهاد می‌شوند:
+
+1. **Microsoft Learn - Anonymous Types:**
+   [https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/anonymous-types](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/anonymous-types)
+2. **Microsoft Learn - Implicitly typed local variables (var):**
+   [https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/implicit-and-explicitly-typed-variables](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/implicit-and-explicitly-typed-variables)
+3. **C# Language Specification (ECMA-334) - Anonymous Object Creation Expressions:**
+   [https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/expressions#117155-anonymous-object-creation-expressions](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/expressions#117155-anonymous-object-creation-expressions)
+
+***
+*اگر این مقاله برای شما مفید بود، فراموش نکنید که به این Repository ستاره (⭐) بدهید و در صورت داشتن سوال، یک Issue باز کنید!*
+
+***
+
+**نکته برای شما (سازنده Repository):** 
+* این فایل را با نام `Anonymous-Types-and-Var.md` یا مشابه آن در پوشه مقالات خود ذخیره کنید.
+* لینک‌های داخلی (فهرست مطالب) به صورت Anchor استاندارد گیت‌هاب نوشته شده‌اند و در حالت Preview گیت‌هاب به درستی کار خواهند کرد.
+* اگر نیاز به تغییر لحن یا اضافه کردن بخش خاصی (مثلاً مقایسه با Recordها در C# 9) داشتید، بفرمایید تا اعمال کنم!

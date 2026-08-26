@@ -1,0 +1,936 @@
+### USER
+من در حال ساخت یک Repository آموزشی درباره C# هستم و می‌خواهم مبحث «نام‌گذاری Propertyها در Anonymous Type» را به‌صورت یک مقاله کامل و آموزشی بنویسی.
+
+موضوع اصلی:
+نام‌گذاری Propertyها در Anonymous Type
+
+موارد زیر را از مقدماتی تا پیشرفته توضیح بده:
+- تعریف صریح Property Name
+- Syntax مربوط به Name = Value
+- Property Name Inference
+- استفاده مستقیم از نام متغیر
+- استفاده از Member Access
+- نحوه تعیین نام Property توسط کامپایلر
+- تفاوت این دو حالت:
+  new { Name = name }
+  new { name }
+- مثال‌های متعدد
+- مواردی که کامپایلر نمی‌تواند نام Property را استنباط کند
+- اشتباهات رایج
+- نکات مربوط به نام‌گذاری
+- تأثیر نام Property در یکسان بودن Anonymous Typeها
+
+مقاله باید برای مبتدی قابل فهم باشد ولی جزئیات فنی کافی برای برنامه‌نویس حرفه‌ای نیز داشته باشد.
+
+ساختار مقاله:
+- عنوان
+- فهرست مطالب
+- لینک‌های داخلی
+- آموزش مرحله‌به‌مرحله
+- مثال‌های C#
+- توضیح مثال‌ها
+- نکات مهم
+- اشتباهات رایج
+- جمع‌بندی
+- منابع معتبر
+
+از Microsoft Learn و C# Language Specification به عنوان منابع اصلی استفاده کن و لینک مستقیم آن‌ها را در انتها بیاور.
+
+### ASSISTANT
+# نام‌گذاری Propertyها در Anonymous Type در C#
+
+## فهرست مطالب
+
+1. [مقدمه](#مقدمه)
+2. [آشنایی با Anonymous Types](#آشنایی-با-anonymous-types)
+3. [تعریف صریح Property Name](#تعریف-صریح-property-name)
+4. [استنباط نام Property (Name Inference)](#استنباط-نام-property-name-inference)
+5. [تفاوت بین تعریف صریح و استنباط نام](#تفاوت-بین-تعریف-صریح-و-استنباط-نام)
+6. [Member Access و استنباط نام](#member-access-و-استنباط-نام)
+7. [نحوه تعیین نام Property توسط کامپایلر](#نحوه-تعیین-نام-property-توسط-کامپایلر)
+8. [مواردی که کامپایلر نمی‌تواند نام را استنباط کند](#مواردی-که-کامپایلر-نمی‌تواند-نام-را-استنباط-کند)
+9. [تأثیر نام Property در یکسان بودن Anonymous Typeها](#تأثیر-نام-property-در-یکسان-بودن-anonymous-typeها)
+10. [اشتباهات رایج](#اشتباهات-رایج)
+11. [نکات مهم](#نکات-مهم)
+12. [جمع‌بندی](#جمع‌بندی)
+13. [منابع](#منابع)
+
+---
+
+## لینک‌های داخلی
+
+- [تعریف صریح Property Name](#تعریف-صریح-property-name)
+- [استنباط نام Property](#استنباط-نام-property-name-inference)
+- [تفاوت تعریف صریح و استنباط](#تفاوت-بین-تعریف-صریح-و-استنباط-نام)
+- [Member Access](#member-access-و-استنباط-نام)
+- [موارد خطا](#مواردی-که-کامپایلر-نمی‌تواند-نام-را-استنباط-کند)
+- [یکسان بودن Anonymous Types](#تأثیر-نام-property-در-یکسان-بودن-anonymous-typeها)
+
+---
+
+## مقدمه
+
+Anonymous Types یکی از ویژگی‌های قدرتمند C# است که در نسخه 3.0 معرفی شد و به شما امکان می‌دهد بدون نیاز به تعریف کلاس جداگانه، اشیائی با propertyهای مختلف ایجاد کنید. یکی از مهم‌ترین مباحث در کار با Anonymous Types، نحوه نام‌گذاری propertyها است که تأثیر مستقیمی بر خوانایی کد، رفتار کامپایلر و یکسان بودن typeها دارد.
+
+در این مقاله، به‌صورت کامل و مرحله‌به‌مرحله، تمام جنبه‌های نام‌گذاری propertyها در Anonymous Types را بررسی می‌کنیم.
+
+---
+
+## آشنایی با Anonymous Types
+
+قبل از ورود به بحث نام‌گذاری، بیایید با خود Anonymous Types آشنا شویم:
+
+```csharp
+var person = new { Name = "Ali", Age = 30 };
+Console.WriteLine(person.Name); // خروجی: Ali
+Console.WriteLine(person.Age);  // خروجی: 30
+```
+
+**ویژگی‌های Anonymous Types:**
+- نوع آن‌ها توسط کامپایلر تولید می‌شود
+- فقط برای خواندن هستند (read-only)
+- برای LINQ بسیار مفیدند
+- نام type آن‌ها توسط کامپایلر تولید می‌شود و قابل دسترسی نیست
+
+---
+
+## تعریف صریح Property Name
+
+ساده‌ترین روش برای نام‌گذاری propertyها، استفاده از syntax `Name = Value` است:
+
+```csharp
+var product = new 
+{ 
+    ProductName = "Laptop",
+    Price = 1200.50,
+    InStock = true
+};
+
+Console.WriteLine(product.ProductName); // خروجی: Laptop
+Console.WriteLine(product.Price);       // خروجی: 1200.5
+Console.WriteLine(product.InStock);     // خروجی: True
+```
+
+**نکات مهم:**
+- نام property باید یک valid C# identifier باشد
+- نام‌ها case-sensitive هستند (حساس به حروف بزرگ و کوچک)
+- می‌توانید از هر نوع داده‌ای برای مقدار استفاده کنید
+
+### مثال‌های بیشتر:
+
+```csharp
+// استفاده از انواع مختلف داده
+var data = new 
+{
+    StringValue = "Hello",
+    IntValue = 42,
+    DoubleValue = 3.14,
+    BoolValue = true,
+    DateTimeValue = DateTime.Now,
+    ArrayValue = new[] { 1, 2, 3 }
+};
+
+// استفاده از expressions
+var calculation = new 
+{
+    Sum = 10 + 20,
+    Product = 5 * 6,
+    Message = "Result: " + (10 + 20)
+};
+```
+
+---
+
+## استنباط نام Property (Name Inference)
+
+C# یک ویژگی هوشمند به نام **Name Inference** دارد که به کامپایلر اجازه می‌دهد نام property را از نام متغیر یا expression استنباط کند:
+
+```csharp
+string name = "Sara";
+int age = 25;
+
+// به جای نوشتن:
+var person1 = new { Name = name, Age = age };
+
+// می‌توانید بنویسید:
+var person2 = new { name, age };
+
+Console.WriteLine(person2.name); // خروجی: Sara
+Console.WriteLine(person2.age);  // خروجی: 25
+```
+
+**قانون Name Inference:**
+وقتی فقط یک identifier (بدون `=`) در initializer قرار می‌دهید، کامپایلر نام property را همان نام identifier قرار می‌دهد.
+
+### مثال‌های Name Inference:
+
+```csharp
+// استفاده از متغیرها
+string firstName = "John";
+string lastName = "Doe";
+var person = new { firstName, lastName };
+// معادل است با: new { firstName = firstName, lastName = lastName }
+
+// استفاده از propertyهای یک object
+class Employee
+{
+    public string Department { get; set; }
+    public decimal Salary { get; set; }
+}
+
+var emp = new Employee { Department = "IT", Salary = 5000 };
+var empInfo = new { emp.Department, emp.Salary };
+// نام propertyها: Department و Salary
+
+// استفاده از method call (بدون argument)
+string GetName() => "Alice";
+var nameInfo = new { GetName };
+// نام property: GetName (نام method)
+// مقدار property: delegate به method
+```
+
+---
+
+## تفاوت بین تعریف صریح و استنباط نام
+
+این یکی از مهم‌ترین مباحث است که باید به‌دقت درک کنید:
+
+```csharp
+string name = "Bob";
+
+// حالت ۱: تعریف صریح
+var person1 = new { Name = name };
+Console.WriteLine(person1.Name); // ✅ کار می‌کند
+// Console.WriteLine(person1.name); // ❌ خطا: 'name' وجود ندارد
+
+// حالت ۲: استنباط نام
+var person2 = new { name };
+Console.WriteLine(person2.name); // ✅ کار می‌کند
+// Console.WriteLine(person2.Name); // ❌ خطا: 'Name' وجود ندارد
+```
+
+**تفاوت کلیدی:**
+- `new { Name = name }`: نام property **"Name"** است (حرف بزرگ)
+- `new { name }`: نام property **"name"** است (حرف کوچک)
+
+### مثال کامل:
+
+```csharp
+string city = "Tehran";
+int population = 9000000;
+
+// تعریف صریح با نام‌های متفاوت
+var location1 = new { City = city, Population = population };
+Console.WriteLine(location1.City);      // ✅ Tehran
+Console.WriteLine(location1.Population); // ✅ 9000000
+
+// استنباط نام
+var location2 = new { city, population };
+Console.WriteLine(location2.city);      // ✅ Tehran
+Console.WriteLine(location2.population); // ✅ 9000000
+
+// ترکیب هر دو حالت
+var location3 = new { City = city, population };
+Console.WriteLine(location3.City);      // ✅ Tehran
+Console.WriteLine(location3.population); // ✅ 9000000
+```
+
+---
+
+## Member Access و استنباط نام
+
+وقتی از member access استفاده می‌کنید، کامپایلر نام property را از نام member استنباط می‌کند:
+
+```csharp
+class Customer
+{
+    public string FullName { get; set; }
+    public string Email { get; set; }
+    public int Age { get; set; }
+}
+
+var customer = new Customer 
+{ 
+    FullName = "Mary Johnson", 
+    Email = "mary@example.com",
+    Age = 35 
+};
+
+// استنباط نام از propertyها
+var customerInfo = new 
+{ 
+    customer.FullName,
+    customer.Email,
+    customer.Age
+};
+
+Console.WriteLine(customerInfo.FullName); // ✅ Mary Johnson
+Console.WriteLine(customerInfo.Email);    // ✅ mary@example.com
+Console.WriteLine(customerInfo.Age);      // ✅ 35
+
+// معادل است با:
+var customerInfoExplicit = new 
+{ 
+    FullName = customer.FullName,
+    Email = customer.Email,
+    Age = customer.Age
+};
+```
+
+### مثال‌های بیشتر با Member Access:
+
+```csharp
+// استفاده از fieldها
+class Point
+{
+    public int X;
+    public int Y;
+}
+
+var point = new Point { X = 10, Y = 20 };
+var pointInfo = new { point.X, point.Y };
+Console.WriteLine(pointInfo.X); // ✅ 10
+Console.WriteLine(pointInfo.Y); // ✅ 20
+
+// استفاده از nested properties
+class Address
+{
+    public string City { get; set; }
+    public string Country { get; set; }
+}
+
+class Person
+{
+    public string Name { get; set; }
+    public Address Address { get; set; }
+}
+
+var person = new Person 
+{ 
+    Name = "David",
+    Address = new Address { City = "London", Country = "UK" }
+};
+
+// فقط propertyهای مورد نیاز را استخراج کنید
+var personLocation = new 
+{ 
+    person.Name,
+    person.Address.City,
+    person.Address.Country
+};
+
+Console.WriteLine(personLocation.Name);    // ✅ David
+Console.WriteLine(personLocation.City);    // ✅ London
+Console.WriteLine(personLocation.Country); // ✅ UK
+```
+
+---
+
+## نحوه تعیین نام Property توسط کامپایلر
+
+کامپایلر C# از قوانین مشخصی برای تعیین نام propertyها پیروی می‌کند:
+
+### قانون ۱: تعریف صریح (Explicit Definition)
+```csharp
+var obj = new { PropertyName = value };
+// نام property: PropertyName
+```
+
+### قانون ۲: استنباط از Identifier ساده
+```csharp
+string variableName = "value";
+var obj = new { variableName };
+// نام property: variableName (همان نام متغیر)
+```
+
+### قانون ۳: استنباط از Member Access
+```csharp
+var obj = new { object.PropertyName };
+// نام property: PropertyName (نام member)
+```
+
+### قانون ۴: ترکیب قوانین
+```csharp
+string name = "Alice";
+int age = 30;
+
+class Person
+{
+    public string City { get; set; }
+}
+
+var person = new Person { City = "Paris" };
+
+var result = new 
+{ 
+    FullName = name,      // تعریف صریح: FullName
+    age,                  // استنباط از متغیر: age
+    person.City           // استنباط از member: City
+};
+```
+
+### مثال کامل از قوانین کامپایلر:
+
+```csharp
+class Product
+{
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+}
+
+var product = new Product { Name = "Phone", Price = 500 };
+string category = "Electronics";
+int stock = 100;
+
+var productInfo = new 
+{
+    // قانون ۱: تعریف صریح
+    ProductName = product.Name,
+    
+    // قانون ۲: استنباط از متغیر
+    category,
+    
+    // قانون ۳: استنباط از member
+    product.Price,
+    
+    // قانون ۲: استنباط از متغیر
+    stock,
+    
+    // قانون ۱: تعریف صریح با expression
+    TotalValue = product.Price * stock
+};
+
+Console.WriteLine(productInfo.ProductName);  // Phone
+Console.WriteLine(productInfo.category);     // Electronics
+Console.WriteLine(productInfo.Price);        // 500
+Console.WriteLine(productInfo.stock);        // 100
+Console.WriteLine(productInfo.TotalValue);   // 50000
+```
+
+---
+
+## مواردی که کامپایلر نمی‌تواند نام را استنباط کند
+
+کامپایلر تنها در صورتی می‌تواند نام property را استنباط کند که expression یک **identifier ساده** یا **member access** باشد. در موارد زیر باید نام property را به‌صورت صریح مشخص کنید:
+
+### ۱. استفاده از Expressions
+
+```csharp
+int x = 10;
+int y = 20;
+
+// ❌ خطا: کامپایلر نمی‌تواند نام را استنباط کند
+// var result = new { x + y };
+
+// ✅ صحیح: باید نام صریح بدهید
+var result = new { Sum = x + y };
+Console.WriteLine(result.Sum); // 30
+```
+
+### ۲. استفاده از Literal Values
+
+```csharp
+// ❌ خطا
+// var data = new { 42 };
+// var text = new { "Hello" };
+
+// ✅ صحیح
+var data = new { Value = 42 };
+var text = new { Message = "Hello" };
+```
+
+### ۳. استفاده از Method Call با Argument
+
+```csharp
+string GetName(string prefix) => prefix + " Alice";
+
+// ❌ خطا: method call با argument
+// var info = new { GetName("Ms.") };
+
+// ✅ صحیح: باید نام صریح بدهید
+var info = new { FullName = GetName("Ms.") };
+Console.WriteLine(info.FullName); // Ms. Alice
+```
+
+### ۴. استفاده از Method Call بدون Argument (نکته مهم)
+
+```csharp
+string GetMessage() => "Hello World";
+
+// ✅ این کار می‌کند! نام property: GetMessage
+// اما مقدار property یک delegate است، نه نتیجه method
+var info = new { GetMessage };
+
+// برای گرفتن نتیجه method، باید نام صریح بدهید
+var result = new { Message = GetMessage() };
+Console.WriteLine(result.Message); // Hello World
+```
+
+### ۵. استفاده از Cast یا Conversion
+
+```csharp
+int number = 42;
+
+// ❌ خطا
+// var data = new { (double)number };
+
+// ✅ صحیح
+var data = new { DoubleValue = (double)number };
+Console.WriteLine(data.DoubleValue); // 42.0
+```
+
+### ۶. استفاده از Conditional Expression
+
+```csharp
+int age = 20;
+
+// ❌ خطا
+// var info = new { age >= 18 ? "Adult" : "Minor" };
+
+// ✅ صحیح
+var info = new { Status = age >= 18 ? "Adult" : "Minor" };
+Console.WriteLine(info.Status); // Adult
+```
+
+### جدول خلاصه:
+
+| Expression | استنباط نام | نیاز به نام صریح |
+|------------|-------------|------------------|
+| `variable` | ✅ بله | ❌ خیر |
+| `object.Property` | ✅ بله | ❌ خیر |
+| `object.Field` | ✅ بله | ❌ خیر |
+| `MethodName` (بدون پرانتز) | ✅ بله | ❌ خیر |
+| `x + y` | ❌ خیر | ✅ بله |
+| `42` | ❌ خیر | ✅ بله |
+| `"text"` | ❌ خیر | ✅ بله |
+| `Method()` | ❌ خیر | ✅ بله |
+| `Method(arg)` | ❌ خیر | ✅ بله |
+| `(Type)value` | ❌ خیر | ✅ بله |
+| `condition ? a : b` | ❌ خیر | ✅ بله |
+
+---
+
+## تأثیر نام Property در یکسان بودن Anonymous Typeها
+
+این یکی از مهم‌ترین مفاهیم است که باید به‌دقت درک کنید. دو Anonymous Type تنها در صورتی **یکسان** در نظر گرفته می‌شوند که:
+
+1. **تعداد propertyها** یکسان باشد
+2. **نام propertyها** یکسان باشد (case-sensitive)
+3. **نوع propertyها** به ترتیب یکسان باشد
+
+### مثال ۱: نام‌های متفاوت = Typeهای متفاوت
+
+```csharp
+string name = "Alice";
+int age = 30;
+
+var person1 = new { Name = name, Age = age };
+var person2 = new { name, age };
+
+// person1 و person2 نوع‌های متفاوتی هستند!
+// person1: { Name: string, Age: int }
+// person2: { name: string, age: int }
+
+// ❌ این کار نمی‌کند (compile error)
+// person1 = person2;
+
+Console.WriteLine(person1.GetType() == person2.GetType()); // False
+```
+
+### مثال ۲: ترتیب propertyها مهم است
+
+```csharp
+var obj1 = new { Name = "Bob", Age = 25 };
+var obj2 = new { Age = 25, Name = "Bob" };
+
+// obj1 و obj2 نوع‌های متفاوتی هستند!
+// obj1: { Name: string, Age: int }
+// obj2: { Age: int, Name: string }
+
+Console.WriteLine(obj1.GetType() == obj2.GetType()); // False
+```
+
+### مثال ۳: نوع propertyها مهم است
+
+```csharp
+var obj1 = new { Value = 42 };
+var obj2 = new { Value = 42.0 };
+
+// obj1 و obj2 نوع‌های متفاوتی هستند!
+// obj1: { Value: int }
+// obj2: { Value: double }
+
+Console.WriteLine(obj1.GetType() == obj2.GetType()); // False
+```
+
+### مثال ۴: Anonymous Typeهای یکسان
+
+```csharp
+var obj1 = new { Name = "Alice", Age = 30 };
+var obj2 = new { Name = "Bob", Age = 25 };
+var obj3 = new { Name = "Charlie", Age = 35 };
+
+// همه این‌ها نوع یکسانی دارند!
+// { Name: string, Age: int }
+
+Console.WriteLine(obj1.GetType() == obj2.GetType()); // True
+Console.WriteLine(obj2.GetType() == obj3.GetType()); // True
+```
+
+### اهمیت در LINQ:
+
+```csharp
+var people = new[]
+{
+    new { Name = "Alice", Age = 30, City = "Tehran" },
+    new { Name = "Bob", Age = 25, City = "London" },
+    new { Name = "Charlie", Age = 30, City = "Tehran" },
+    new { Name = "David", Age = 25, City = "Paris" }
+};
+
+// Group By بر اساس Age و City
+var grouped = people.GroupBy(p => new { p.Age, p.City });
+
+foreach (var group in grouped)
+{
+    Console.WriteLine($"Age: {group.Key.Age}, City: {group.Key.City}");
+    foreach (var person in group)
+    {
+        Console.WriteLine($"  - {person.Name}");
+    }
+}
+
+// خروجی:
+// Age: 30, City: Tehran
+//   - Alice
+//   - Charlie
+// Age: 25, City: London
+//   - Bob
+// Age: 25, City: Paris
+//   - David
+```
+
+**نکته مهم:** اگر نام propertyها را تغییر دهید، Group By به‌درستی کار نمی‌کند:
+
+```csharp
+// ❌ این کار نمی‌کند به‌طور صحیح
+var groupedWrong = people.GroupBy(p => new { Age = p.Age, Location = p.City });
+
+// ✅ این کار می‌کند
+var groupedCorrect = people.GroupBy(p => new { p.Age, p.City });
+```
+
+### تأثیر در Equality:
+
+```csharp
+var person1 = new { Name = "Alice", Age = 30 };
+var person2 = new { Name = "Alice", Age = 30 };
+var person3 = new { Name = "Bob", Age = 30 };
+
+// Equality بر اساس مقدار propertyها است
+Console.WriteLine(person1.Equals(person2)); // True
+Console.WriteLine(person1.Equals(person3)); // False
+
+// GetHashCode نیز بر اساس propertyها است
+Console.WriteLine(person1.GetHashCode() == person2.GetHashCode()); // True
+```
+
+---
+
+## اشتباهات رایج
+
+### اشتباه ۱: انتظار یکسان بودن typeها با نام‌های متفاوت
+
+```csharp
+var obj1 = new { Name = "Alice" };
+var obj2 = new { name = "Bob" };
+
+// ❌ اشتباه: انتظار یکسان بودن
+// var list = new[] { obj1, obj2 }; // Compile Error!
+
+// ✅ صحیح: استفاده از نام‌های یکسان
+var obj3 = new { Name = "Alice" };
+var obj4 = new { Name = "Bob" };
+var list = new[] { obj3, obj4 }; // ✅ کار می‌کند
+```
+
+### اشتباه ۲: فراموش کردن case-sensitivity
+
+```csharp
+var person = new { Name = "Alice" };
+
+// ❌ خطا
+// Console.WriteLine(person.name); // 'name' وجود ندارد
+
+// ✅ صحیح
+Console.WriteLine(person.Name); // ✅ Alice
+```
+
+### اشتباه ۳: تلاش برای تغییر مقدار property
+
+```csharp
+var person = new { Name = "Alice", Age = 30 };
+
+// ❌ خطا: propertyها read-only هستند
+// person.Name = "Bob"; // Compile Error!
+// person.Age = 31;     // Compile Error!
+
+// ✅ صحیح: ایجاد object جدید
+person = new { Name = "Bob", Age = 31 };
+```
+
+### اشتباه ۴: استفاده از نام‌های نامعتبر
+
+```csharp
+// ❌ خطا: نام‌های نامعتبر
+// var obj = new { 123Invalid = "value" };
+// var obj = new { my-property = "value" };
+// var obj = new { class = "value" }; // class یک keyword است
+
+// ✅ صحیح: استفاده از @ برای keywords
+var obj = new { @class = "value" };
+Console.WriteLine(obj.@class); // value
+```
+
+### اشتباه ۵: عدم درک Name Inference
+
+```csharp
+string Name = "Alice"; // حرف بزرگ
+
+var person1 = new { Name };
+var person2 = new { Name = Name };
+
+// ✅ هر دو یکسان هستند
+Console.WriteLine(person1.Name); // Alice
+Console.WriteLine(person2.Name); // Alice
+```
+
+### اشتباه ۶: استفاده از method call بدون درک رفتار
+
+```csharp
+string GetName() => "Alice";
+
+// ❌ اشتباه: انتظار نتیجه method
+// var info = new { GetName };
+// Console.WriteLine(info.GetName); // این یک delegate است، نه string!
+
+// ✅ صحیح
+var info = new { Name = GetName() };
+Console.WriteLine(info.Name); // Alice
+```
+
+---
+
+## نکات مهم
+
+### ۱. استفاده از Name Inference برای کد تمیزتر
+
+```csharp
+// ❌ کد طولانی
+var person = new 
+{ 
+    Name = name,
+    Age = age,
+    City = city
+};
+
+// ✅ کد تمیزتر
+var person = new { name, age, city };
+```
+
+### ۲. ترکیب هوشمندانه تعریف صریح و استنباط
+
+```csharp
+string firstName = "John";
+string lastName = "Doe";
+int age = 30;
+
+var person = new 
+{ 
+    FullName = $"{firstName} {lastName}", // تعریف صریح
+    firstName,                             // استنباط
+    lastName,                              // استنباط
+    age                                    // استنباط
+};
+```
+
+### ۳. توجه به ترتیب propertyها
+
+```csharp
+// ✅ همیشه ترتیب یکسانی داشته باشید
+var person1 = new { Name = "Alice", Age = 30 };
+var person2 = new { Name = "Bob", Age = 25 };
+
+// ❌ از تغییر ترتیب خودداری کنید
+var person3 = new { Age = 35, Name = "Charlie" }; // نوع متفاوت!
+```
+
+### ۴. استفاده در LINQ
+
+```csharp
+var products = GetProducts();
+
+// ✅ استفاده از name inference در Select
+var productNames = products.Select(p => new 
+{ 
+    p.Name, 
+    p.Price 
+});
+
+// ✅ استفاده در Where
+var expensiveProducts = products.Where(p => new 
+{ 
+    p.Name, 
+    p.Price 
+}.Price > 100);
+```
+
+### ۵. توجه به Performance
+
+```csharp
+// ✅ کامپایلر Anonymous Typeهای یکسان را cache می‌کند
+var obj1 = new { Name = "Alice" };
+var obj2 = new { Name = "Bob" };
+// هر دو از یک type استفاده می‌کنند
+
+// ❌ از ایجاد typeهای غیرضروری خودداری کنید
+// در loopها، اگر type یکسان است، مشکلی نیست
+```
+
+### ۶. استفاده از var برای Anonymous Types
+
+```csharp
+// ✅ همیشه از var استفاده کنید
+var person = new { Name = "Alice", Age = 30 };
+
+// ❌ نمی‌توانید type را صریح مشخص کنید
+// ??? person = new { Name = "Alice", Age = 30 }; // نوع ناشناخته!
+```
+
+### ۷. توجه به Scope
+
+```csharp
+void Method1()
+{
+    var person = new { Name = "Alice" };
+    // person فقط در این method قابل دسترسی است
+}
+
+void Method2()
+{
+    // ❌ نمی‌توانید person را اینجا استفاده کنید
+    // Console.WriteLine(person.Name); // Error!
+}
+```
+
+### ۸. بازگشت از Method
+
+```csharp
+// ❌ نمی‌توانید Anonymous Type را به‌عنوان return type استفاده کنید
+// public ??? GetPerson()
+// {
+//     return new { Name = "Alice" };
+// }
+
+// ✅ راه‌حل ۱: استفاده از object
+public object GetPerson()
+{
+    return new { Name = "Alice", Age = 30 };
+}
+
+// ✅ راه‌حل ۲: استفاده از Tuple (C# 7.0+)
+public (string Name, int Age) GetPersonTuple()
+{
+    return ("Alice", 30);
+}
+
+// ✅ راه‌حل ۳: استفاده از dynamic
+public dynamic GetPersonDynamic()
+{
+    return new { Name = "Alice", Age = 30 };
+}
+```
+
+---
+
+## جمع‌بندی
+
+در این مقاله، به‌صورت کامل مبحث نام‌گذاری propertyها در Anonymous Types را بررسی کردیم. نکات کلیدی:
+
+### مفاهیم اصلی:
+
+1. **تعریف صریح Property Name:**
+   - استفاده از syntax `Name = Value`
+   - کنترل کامل بر نام property
+
+2. **استنباط نام (Name Inference):**
+   - کامپایلر نام property را از identifier استنباط می‌کند
+   - برای متغیرها: `new { variable }`
+   - برای member access: `new { object.Property }`
+
+3. **تفاوت کلیدی:**
+   - `new { Name = name }` → نام property: **Name**
+   - `new { name }` → نام property: **name**
+
+4. **موارد خطا:**
+   - expressions (مثل `x + y`)
+   - literal values (مثل `42`)
+   - method calls با argument
+   - casts و conversions
+
+5. **یکسان بودن Anonymous Types:**
+   - تعداد propertyها باید یکسان باشد
+   - نام propertyها باید یکسان باشد (case-sensitive)
+   - نوع propertyها به ترتیب یکسان باشد
+
+### بهترین شیوه‌ها:
+
+- ✅ از name inference برای کد تمیزتر استفاده کنید
+- ✅ ترتیب propertyها را ثابت نگه دارید
+- ✅ در LINQ از name inference استفاده کنید
+- ✅ به case-sensitivity توجه کنید
+- ✅ از var برای declaration استفاده کنید
+
+### نکات پایانی:
+
+Anonymous Types ابزاری قدرتمند برای ایجاد اشیاء موقت هستند، به‌ویژه در LINQ. درک صحیح نحوه نام‌گذاری propertyها به شما کمک می‌کند کدی تمیزتر، خواناتر و بدون خطا بنویسید. همیشه به یاد داشته باشید که نام propertyها تأثیر مستقیمی بر یکسان بودن typeها دارد و این موضوع در عملیات‌هایی مانند Group By و Join بسیار مهم است.
+
+---
+
+## منابع
+
+برای مطالعه بیشتر و عمیق‌تر، منابع زیر پیشنهاد می‌شوند:
+
+### Microsoft Learn (مستندات رسمی Microsoft):
+
+1. **Anonymous Types - C# Programming Guide**
+   - [https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/anonymous-types](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/anonymous-types)
+   - مستند کامل و رسمی درباره Anonymous Types
+
+2. **C# Language Specification - Anonymous Object Creation Expressions**
+   - [https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/expressions#117155-anonymous-object-creation-expressions](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/expressions#117155-anonymous-object-creation-expressions)
+   - مشخصات رسمی زبان C# درباره Anonymous Object Creation
+
+3. **LINQ and Anonymous Types**
+   - [https://learn.microsoft.com/en-us/dotnet/csharp/linq/](https://learn.microsoft.com/en-us/dotnet/csharp/linq/)
+   - راهنمای کامل LINQ و استفاده از Anonymous Types
+
+### منابع تکمیلی:
+
+4. **C# in Depth by Jon Skeet**
+   - فصل مربوط به Anonymous Types و LINQ
+   - توضیحات عمیق درباره نحوه کار کامپایلر
+
+5. **C# Language Specification (ECMA-334)**
+   - بخش 11.7.15.5: Anonymous object creation expressions
+   - [https://www.ecma-international.org/publications-and-standards/standards/ecma-334/](https://www.ecma-international.org/publications-and-standards/standards/ecma-334/)
+
+---
+
+**تاریخ آخرین به‌روزرسانی:** August 27, 2026  
+**نویسنده:** Qwen3.7  
+**نسخه C# مورد بررسی:** C# 3.0 تا C# 12
+
+---
+
+امیدوارم این مقاله برای شما مفید بوده باشد. اگر سؤال یا ابهامی دارید، خوشحال می‌شوم کمک کنم!

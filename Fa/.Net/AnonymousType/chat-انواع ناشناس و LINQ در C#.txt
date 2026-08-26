@@ -1,0 +1,357 @@
+### USER
+من در حال ساخت یک Repository آموزشی درباره C# هستم و می‌خواهم مبحث «Anonymous Type و LINQ» را به‌صورت یک مقاله آموزشی جامع از مقدماتی تا پیشرفته بنویسی.
+
+موضوع اصلی:
+Anonymous Type و LINQ
+
+مقاله باید شامل موارد زیر باشد:
+- LINQ چیست؟
+- چرا Anonymous Type در LINQ بسیار استفاده می‌شود؟
+- Projection چیست؟
+- استفاده از Select
+- استفاده از Select با Anonymous Type
+- انتخاب چند Property
+- تغییر نام Property در Projection
+- محاسبه Property جدید
+- Nested Anonymous Type در LINQ
+- استفاده در Query Syntax
+- استفاده در Method Syntax
+- ترکیب Where و Select
+- OrderBy و Anonymous Type
+- GroupBy و Anonymous Type
+- Join و Anonymous Type
+- مثال‌های ساده
+- مثال‌های واقعی‌تر
+- LINQ to Objects
+- LINQ to Entities / Entity Framework Core
+- نکات مربوط به IQueryable و SQL Translation در صورت مرتبط بودن
+- اشتباهات رایج
+- نکات Performance در حدی که مستند و معتبر باشد
+
+برای هر مثال، ابتدا مسئله را توضیح بده، سپس کد و بعد نتیجه را نشان بده.
+
+مقاله باید دارای فهرست مطالب، لینک داخلی، مثال‌های عملی، نکات مهم، اشتباهات رایج، جمع‌بندی و منابع معتبر باشد.
+
+منابع اصلی:
+Microsoft Learn درباره Anonymous Types، LINQ و EF Core.
+
+### ASSISTANT
+# راهنمای جامع Anonymous Type و LINQ در C# (از مقدماتی تا پیشرفته)
+
+به بخش آموزش‌های پیشرفته C# خوش آمدید. در این مقاله، یکی از قدرتمندترین ترکیب‌ها در دنیای C# یعنی **Anonymous Types** و **LINQ** را بررسی می‌کنیم. این دو مفهوم در کنار هم، نحوه پردازش و تغییر شکل داده‌ها را برای همیشه تغییر داده‌اند.
+
+---
+
+## 📑 فهرست مطالب
+1. [مفاهیم پایه](#1-مفاهیم-پایه)
+   - [LINQ چیست؟](#linq-چیست)
+   - [Projection (تغییر شکل داده) چیست؟](#projection-چیست)
+   - [Anonymous Type چیست و چرا در LINQ حیاتی است؟](#anonymous-type-چیست)
+2. [کار با Select و Anonymous Types](#2-کار-با-select)
+   - [انتخاب چند Property و تغییر نام آن‌ها](#انتخاب-چند-property-و-تغییر-نام)
+   - [محاسبه Property جدید](#محاسبه-property-جدید)
+   - [Nested Anonymous Type (تایپ‌های ناشناس تودرتو)](#nested-anonymous-type)
+   - [تفاوت Query Syntax و Method Syntax](#query-syntax-در-برابر-method-syntax)
+3. [عملیات پیشرفته LINQ با Anonymous Types](#3-عملیات-پیشرفته)
+   - [ترکیب Where و Select](#ترکیب-where-و-select)
+   - [مرتب‌سازی (OrderBy) بر اساس Anonymous Type](#orderby-و-anonymous-type)
+   - [گروه‌بندی (GroupBy) و Anonymous Type](#groupby-و-anonymous-type)
+   - [اتصال جداول (Join) و Projection](#join-و-anonymous-type)
+4. [دنیای واقعی: LINQ to Objects در برابر EF Core](#4-دنیای-واقعی)
+   - [LINQ to Objects](#linq-to-objects)
+   - [LINQ to Entities و ترجمه به SQL](#linq-to-entities-و-ef-core)
+5. [نکات مهم، اشتباهات رایج و Performance](#5-نکات-مهم-و-اشتباهات-رایج)
+6. [جمع‌بندی](#6-جمع-بندی)
+7. [منابع معتبر](#7-منابع)
+
+---
+
+<a name="1-مفاهیم-پایه"></a>
+## 1. مفاهیم پایه
+
+<a name="linq-چیست"></a>
+### LINQ چیست؟
+**LINQ** (Language Integrated Query) مجموعه‌ای از تکنولوژی‌ها در .NET است که قابلیت نوشتن کوئری‌های قدرتمند، تایپ-سیف (Type-Safe) و یکپارچه را مستقیماً درون زبان C# فراهم می‌کند. با LINQ شما می‌توانید از یک سینتکس واحد برای کوئری گرفتن از دیتابیس (EF Core)، فایل‌های XML، یا لیست‌های درون حافظه (Collections) استفاده کنید.
+
+<a name="projection-چیست"></a>
+### Projection (تغییر شکل داده) چیست؟
+در LINQ، **Projection** به معنای انتخاب داده‌ها و **تغییر شکل آن‌ها** قبل از بازگشت نتیجه است. یعنی شما به جای اینکه کل آبجکت را برگردانید، فقط فیلدهای خاصی را که نیاز دارید انتخاب می‌کنید، یا فیلدهای جدیدی می‌سازید، یا فرمت داده را تغییر می‌دهید.
+
+<a name="anonymous-type-چیست"></a>
+### Anonymous Type چیست و چرا در LINQ حیاتی است؟
+**Anonymous Type** یک کلاس است که توسط کامپایلر C# در زمان کامپایل (Compile-time) ساخته می‌شود و شما نیازی به تعریف صریح آن ندارید.
+
+```csharp
+var person = new { Name = "Ali", Age = 30 };
+```
+
+**چرا در LINQ بسیار استفاده می‌شود؟**
+وقتی می‌خواهید یک عملیات Projection انجام دهید (مثلاً فقط `Name` و `Price` یک `Product` را استخراج کنید)، ساختن یک کلاس جدید (DTO) فقط برای این یک کوئری، کدنویسی را شلوغ و غیرمنطقی می‌کند. Anonymous Types دقیقاً برای همین لحظات ساخته شده‌اند: **ایجاد سریع، موقت و تایپ-سیف از یک ساختار داده بدون نیاز به تعریف کلاس.**
+
+---
+
+<a name="2-کار-با-select"></a>
+## 2. کار با Select و Anonymous Types
+
+برای مثال‌ها، فرض کنید کلاس‌های زیر را داریم:
+```csharp
+public class Product 
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+    public int CategoryId { get; set; }
+}
+
+public class Category 
+{
+    public int Id { get; set; }
+    public string Title { get; set; }
+}
+```
+
+<a name="انتخاب-چند-property-و-تغییر-نام"></a>
+### انتخاب چند Property و تغییر نام آن‌ها
+**مسئله:** می‌خواهیم لیستی از محصولات را داشته باشیم که فقط شامل نام و قیمت باشد، اما نام پراپرتی‌ها را به `ProductName` و `FinalPrice` تغییر دهیم.
+
+**کد:**
+```csharp
+var products = GetProducts(); // فرض کنید یک لیست از محصولات داریم
+
+var result = products.Select(p => new 
+{
+    ProductName = p.Name, // تغییر نام
+    FinalPrice = p.Price  // انتخاب با همان نام یا تغییر نام
+});
+
+foreach (var item in result)
+{
+    Console.WriteLine($"{item.ProductName}: {item.FinalPrice}");
+}
+```
+**نتیجه:**
+```text
+Laptop: 1200.00
+Mouse: 25.50
+```
+*نکته: در Anonymous Types، کامپایلر نام پراپرتی‌ها را بر اساس نامی که شما در `new { ... }` تعیین می‌کنید، می‌سازد.*
+
+<a name="محاسبه-property-جدید"></a>
+### محاسبه Property جدید
+**مسئله:** می‌خواهیم قیمت محصولات را با احتساب 9% مالیات محاسبه کنیم.
+
+**کد:**
+```csharp
+var taxedProducts = products.Select(p => new 
+{
+    p.Name,
+    PriceWithTax = p.Price * 1.09m // محاسبه یک فیلد جدید
+});
+```
+
+<a name="nested-anonymous-type"></a>
+### Nested Anonymous Type (تایپ‌های ناشناس تودرتو)
+**مسئله:** می‌خواهیم اطلاعات محصول را در یک سطح و اطلاعات دسته‌بندی (فرضاً یک متغیر دیگر) را در یک سطح جداگانه (تودرتو) قرار دهیم.
+
+**کد:**
+```csharp
+var nestedResult = products.Select(p => new 
+{
+    p.Name,
+    Details = new // یک Anonymous Type درون Anonymous Type دیگر
+    {
+        p.Price,
+        p.CategoryId,
+        IsExpensive = p.Price > 100
+    }
+});
+```
+
+<a name="query-syntax-در-برابر-method-syntax"></a>
+### تفاوت Query Syntax و Method Syntax
+LINQ دو سینتکس برای نوشتن کوئری دارد. خروجی هر دو دقیقاً یکسان است.
+
+**Method Syntax (پیشنهاد ما برای کار با Anonymous Types):**
+```csharp
+var methodSyntax = products.Select(p => new { p.Name, p.Price });
+```
+
+**Query Syntax:**
+```csharp
+var querySyntax = from p in products
+                  select new { p.Name, p.Price };
+```
+*نکته: در Query Syntax حتماً باید از کلمه `select new` استفاده کنید. در Method Syntax از `Select(x => new ...)`.*
+
+---
+
+<a name="3-عملیات-پیشرفته"></a>
+## 3. عملیات پیشرفته LINQ با Anonymous Types
+
+<a name="ترکیب-where-و-select"></a>
+### ترکیب Where و Select
+**مسئله:** فقط محصولات گران‌قیمت (بالای 100 دلار) را پیدا کن و شکل آن‌ها را تغییر بده.
+
+**کد:**
+```csharp
+var expensiveItems = products
+    .Where(p => p.Price > 100) // ابتدا فیلتر می‌کنیم
+    .Select(p => new 
+    {
+        p.Name,
+        Price = p.Price,
+        Status = "Premium"
+    });
+```
+*نکته Performance:* همیشه `Where` را قبل از `Select` قرار دهید تا تعداد آبجکت‌هایی که وارد مرحله Projection می‌شوند کمتر باشد.
+
+<a name="orderby-و-anonymous-type"></a>
+### مرتب‌سازی (OrderBy) بر اساس Anonymous Type
+**مسئله:** محصولات را بر اساس قیمت (که در Projection محاسبه شده) مرتب کن.
+
+**کد:**
+```csharp
+var sorted = products
+    .Select(p => new { p.Name, DiscountedPrice = p.Price * 0.9m })
+    .OrderBy(x => x.DiscountedPrice); // مرتب‌سازی بر اساس فیلد جدید
+```
+
+<a name="groupby-و-anonymous-type"></a>
+### گروه‌بندی (GroupBy) و Anonymous Type
+**مسئله:** محصولات را بر اساس `CategoryId` گروه‌بندی کن و برای هر گروه، تعداد و مجموع قیمت را حساب کن.
+
+**کد:**
+```csharp
+var categoryStats = products
+    .GroupBy(p => p.CategoryId)
+    .Select(group => new 
+    {
+        CategoryId = group.Key,
+        ProductCount = group.Count(),
+        TotalValue = group.Sum(p => p.Price)
+    });
+```
+
+<a name="join-و-anonymous-type"></a>
+### اتصال جداول (Join) و Projection
+**مسئله:** لیست محصولات را به دسته‌بندی‌ها Join کن و نام محصول به همراه نام دسته‌بندی را برگردان.
+
+**کد:**
+```csharp
+var joinedData = products
+    .Join(
+        categories,
+        product => product.CategoryId,
+        category => category.Id,
+        (product, category) => new 
+        {
+            product.Name,
+            CategoryName = category.Title,
+            product.Price
+        }
+    );
+```
+*معادل در Query Syntax:*
+```csharp
+var joinedQuery = from p in products
+                  join c in categories on p.CategoryId equals c.Id
+                  select new { p.Name, CategoryName = c.Title, p.Price };
+```
+
+---
+
+<a name="4-دنیای-واقعی"></a>
+## 4. دنیای واقعی: LINQ to Objects در برابر EF Core
+
+درک تفاوت بین `IEnumerable` و `IQueryable` هنگام استفاده از Anonymous Types **حیاتی** است.
+
+<a name="linq-to-objects"></a>
+### LINQ to Objects
+وقتی روی یک `List<T>` یا آرایه کوئری می‌زنید، LINQ در **حافظه (In-Memory)** اجرا می‌شود. تمام عملیات (Where, Select, GroupBy) روی آبجکت‌های .NET انجام می‌شود. Anonymous Types در اینجا به عنوان کلاس‌های معمولی C# در حافظه ساخته می‌شوند.
+
+<a name="linq-to-entities-و-ef-core"></a>
+### LINQ to Entities و ترجمه به SQL (EF Core)
+وقتی از Entity Framework Core استفاده می‌کنید، شما با `IQueryable` کار می‌کنید.
+**نکته بسیار مهم:** EF Core می‌تواند Anonymous Types را به درستی به **SQL Translation** تبدیل کند!
+
+**کد EF Core:**
+```csharp
+var result = await dbContext.Products
+    .Where(p => p.Price > 100)
+    .Select(p => new 
+    {
+        p.Name,
+        FinalPrice = p.Price * 1.09m
+    })
+    .ToListAsync();
+```
+
+**SQL تولید شده توسط EF Core:**
+```sql
+SELECT [p].[Name], [p].[Price] * 1.09 AS [FinalPrice]
+FROM [Products] AS [p]
+WHERE [p].[Price] > 100.0
+```
+*توضیح:* EF Core به جای اینکه کل جدول `Products` را بکشد و در حافظه C# پراژکت کند، کوئری SQL را دقیقاً بر اساس Anonymous Type شما بهینه‌سازی می‌کند و فقط ستون‌های مورد نیاز را از دیتابیس می‌خواند. این یعنی **Performance فوق‌العاده**.
+
+---
+
+<a name="5-نکات-مهم-و-اشتباهات-رایج"></a>
+## 5. نکات مهم، اشتباهات رایج و Performance
+
+### 🚫 اشتباهات رایج
+1. **بازگرداندن Anonymous Type از متد:**
+   شما نمی‌توانید Anonymous Type را به عنوان Return Type یک متد عمومی (Public) استفاده کنید، زیرا نام کلاس توسط کامپایلر ساخته می‌شود و شما به آن دسترسی ندارید.
+   *راه‌حل:* برای خروجی متدها از `Record`ها، `DTO`ها یا `Tuple`ها استفاده کنید. Anonymous Types فقط برای **استفاده داخلی (Local)** درون همان متد یا کوئری LINQ مناسب هستند.
+   ```csharp
+   // ❌ غلط
+   public var GetProducts() { ... } 
+   
+   // ✅ درست (استفاده از Record در C# 9+)
+   public record ProductDto(string Name, decimal Price);
+   public IEnumerable<ProductDto> GetProducts() { ... }
+   ```
+
+2. **تغییر دادن (Mutate) Anonymous Types:**
+   پراپرتی‌های Anonymous Types فقط `get` هستند (Read-Only).
+   ```csharp
+   var obj = new { Name = "Ali" };
+   obj.Name = "Reza"; // ❌ خطای کامپایل!
+   ```
+
+### ⚡ نکات Performance
+1. **فشار به Garbage Collector (GC):**
+   هر بار که `new { ... }` را در یک حلقه یا کوئری LINQ روی هزاران رکورد صدا می‌زنید، هزاران آبجکت در Heap ساخته می‌شود. در اپلیکیشن‌های بسیار حساس به Performance (High-Frequency Trading یا پردازش بلادرنگ)، این موضوع می‌تواند باعث فشار به GC شود.
+   *راه‌حل:* در این موارد خاص، به جای Anonymous Type از `struct`های شخصی‌سازی شده یا `ValueTuple` استفاده کنید.
+   
+2. **استفاده از AsEnumerable() در EF Core:**
+   اگر قبل از `Select` از `AsEnumerable()` استفاده کنید، تمام داده‌ها از دیتابیس کشیده شده و Projection در حافظه (Client-side) انجام می‌شود که یک **فاجعه Performance** است.
+   ```csharp
+   // ❌ بسیار بد: کل جدول را می‌کشد، بعد در C# پراژکت می‌کند
+   var bad = dbContext.Products.AsEnumerable().Select(p => new { p.Name }); 
+   
+   // ✅ عالی: SQL بهینه تولید می‌کند
+   var good = dbContext.Products.Select(p => new { p.Name }); 
+   ```
+
+---
+
+<a name="6-جمع-بندی"></a>
+## 6. جمع‌بندی
+ترکیب **Anonymous Types** و **LINQ** یکی از زیباترین و کاربردی‌ترین ویژگی‌های C# است.
+- از Anonymous Types برای **Projection** (تغییر شکل داده) بدون نیاز به تعریف کلاس‌های اضافی استفاده کنید.
+- در **EF Core**، این ترکیب به شما اجازه می‌دهد کوئری‌های SQL بهینه‌ای بسازید که فقط ستون‌های مورد نیاز را از دیتابیس بخوانند.
+- به یاد داشته باشید که Anonymous Types برای **استفاده محلی (Local)** طراحی شده‌اند و نباید به عنوان خروجی از لایه‌های مختلف برنامه (مثل خروجی API) برگردانده شوند (برای این کار از `Records` استفاده کنید).
+
+---
+
+<a name="7-منابع"></a>
+## 7. منابع معتبر
+برای مطالعه بیشتر و عمیق‌تر، منابع رسمی مایکروسافت پیشنهاد می‌شود:
+- [Anonymous Types (Microsoft Learn)](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/anonymous-types)
+- [LINQ in C# (Microsoft Learn)](https://learn.microsoft.com/en-us/dotnet/csharp/linq/)
+- [Client vs. Server Evaluation in EF Core](https://learn.microsoft.com/en-us/ef/core/querying/client-eval)
+- [How Query Works (EF Core)](https://learn.microsoft.com/en-us/ef/core/querying/how-query-works)
+
+---
+💡 **پیشنهاد مطالعه بعدی:** [آشنایی با Record Types در C# 9+](#) (برای جایگزینی Anonymous Types در خروجی متدها) | [مدیریت خطا در LINQ](#)

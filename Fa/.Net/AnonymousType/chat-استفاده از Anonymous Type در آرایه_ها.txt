@@ -1,0 +1,539 @@
+### USER
+من در حال ساخت یک Repository آموزشی درباره C# هستم و می‌خواهم مبحث «استفاده از Anonymous Type در آرایه‌ها» را به‌صورت یک مقاله آموزشی کامل بنویسی.
+
+موضوع اصلی:
+Anonymous Type در آرایه‌ها
+
+از سطح مقدماتی شروع کن و به سطح پیشرفته برس.
+
+موارد زیر را پوشش بده:
+- آیا می‌توان Anonymous Type را داخل Array قرار داد؟
+- استفاده از new[]
+- Type Inference در آرایه
+- چرا تمام عناصر Array باید Type سازگار داشته باشند؟
+- رابطه قوانین یکسان بودن Anonymous Type با Array
+- مثال ساده
+- مثال چند Object
+- مثال با Propertyهای متفاوت
+- مثال با ترتیب متفاوت
+- خطاهای رایج
+- تفاوت Array و List در این سناریو
+- استفاده در LINQ
+- مثال‌های واقعی
+
+کدها را مرحله‌به‌مرحله توضیح بده.
+
+مقاله باید دارای فهرست مطالب، لینک داخلی، مثال‌های عملی، نکات مهم، اشتباهات رایج، جمع‌بندی و منابع معتبر باشد.
+
+منابع اصلی را از Microsoft Learn و مستندات رسمی C# انتخاب کن و لینک مستقیم آن‌ها را در انتها قرار بده.
+
+### ASSISTANT
+# استفاده از Anonymous Type در آرایه‌ها در C#
+
+## فهرست مطالب
+1. [مقدمه](#مقدمه)
+2. [آیا می‌توان Anonymous Type را در Array قرار داد؟](#آیا-می‌توان-anonymous-type-را-در-array-قرار-داد)
+3. [استفاده از new[] و Type Inference](#استفاده-از-new-و-type-inference)
+4. [چرا تمام عناصر باید Type سازگار داشته باشند؟](#چرا-تمام-عناصر-باید-type-سازگار-داشته-باشند)
+5. [قوانین یکسان بودن Anonymous Type](#قوانین-یکسان-بودن-anonymous-type)
+6. [مثال‌های عملی](#مثالهای-عملی)
+7. [خطاهای رایج](#خطاهای-رایج)
+8. [تفاوت Array و List](#تفاوت-array-و-list)
+9. [استفاده در LINQ](#استفاده-در-linq)
+10. [مثال‌های واقعی](#مثالهای-واقعی)
+11. [جمع‌بندی](#جمع‌بندی)
+12. [منابع](#منابع)
+
+---
+
+## مقدمه
+
+Anonymous Type در C# امکانی است که به شما اجازه می‌دهد بدون تعریف کلاس جداگانه، اشیایی با Propertyهای دلخواه بسازید. این ویژگی در C# 3.0 معرفی شد و به‌طور گسترده در LINQ استفاده می‌شود.
+
+```csharp
+var person = new { Name = "Ali", Age = 30 };
+```
+
+در این مقاله یاد می‌گیریم چگونه از Anonymous Type در آرایه‌ها استفاده کنیم.
+
+---
+
+## آیا می‌توان Anonymous Type را در Array قرار داد؟
+
+**بله، اما با شرایط خاص!**
+
+شما نمی‌توانید مستقیماً نوع آرایه را مشخص کنید چون Anonymous Type نام ندارد. اما با استفاده از `new[]` و Type Inference می‌توانید آرایه‌ای از Anonymous Type بسازید.
+
+```csharp
+// ❌ این کار نمی‌کند - نوع مشخص نیست
+AnonymousType[] people = new[] { 
+    new { Name = "Ali", Age = 30 } 
+};
+
+// ✅ این کار می‌کند - Compiler نوع را تشخیص می‌دهد
+var people = new[] { 
+    new { Name = "Ali", Age = 30 },
+    new { Name = "Sara", Age = 25 }
+};
+```
+
+---
+
+## استفاده از new[] و Type Inference
+
+### Type Inference چیست؟
+
+Type Inference یعنی Compiler بر اساس مقادیر اولیه، نوع متغیر را تشخیص می‌دهد.
+
+```csharp
+// Compiler تشخیص می‌دهد که این یک آرایه از int است
+var numbers = new[] { 1, 2, 3, 4, 5 };
+
+// Compiler تشخیص می‌دهد که این یک آرایه از string است
+var names = new[] { "Ali", "Sara", "Reza" };
+```
+
+### استفاده با Anonymous Type
+
+```csharp
+var people = new[] {
+    new { Name = "Ali", Age = 30 },
+    new { Name = "Sara", Age = 25 },
+    new { Name = "Reza", Age = 35 }
+};
+
+// دسترسی به عناصر
+Console.WriteLine(people[0].Name); // Ali
+Console.WriteLine(people[1].Age);  // 25
+```
+
+**نکته مهم:** اولین عنصر آرایه به عنوان الگو برای تشخیص نوع استفاده می‌شود.
+
+---
+
+## چرا تمام عناصر باید Type سازگار داشته باشند؟
+
+آرایه‌ها در C# **همگن (Homogeneous)** هستند، یعنی تمام عناصر باید از یک نوع باشند.
+
+```csharp
+// ❌ خطا - انواع متفاوت
+var mixed = new[] {
+    new { Name = "Ali" },           // فقط Name
+    new { Name = "Sara", Age = 25 } // Name و Age
+};
+
+// ✅ صحیح - همه عناصر یکسان
+var people = new[] {
+    new { Name = "Ali", Age = 30 },
+    new { Name = "Sara", Age = 25 }
+};
+```
+
+### دلیل فنی
+
+آرایه‌ها در سطح CLR (Common Language Runtime) باید نوع مشخصی داشته باشند. اگر عناصر متفاوت باشند، Compiler نمی‌تواند نوع آرایه را تشخیص دهد.
+
+---
+
+## قوانین یکسان بودن Anonymous Type
+
+دو Anonymous Type زمانی **یکسان** در نظر گرفته می‌شوند که:
+
+1. **Propertyها به یک ترتیب** باشند
+2. **نام Propertyها یکسان** باشد
+3. **نوع Propertyها یکسان** باشد
+
+```csharp
+// ✅ این دو یکسان هستند
+var person1 = new { Name = "Ali", Age = 30 };
+var person2 = new { Name = "Sara", Age = 25 };
+
+// ❌ این دو متفاوت هستند (ترتیب متفاوت)
+var person3 = new { Name = "Reza", Age = 35 };
+var person4 = new { Age = 40, Name = "Mina" }; // ترتیب عوض شده
+
+// ❌ این دو متفاوت هستند (نوع متفاوت)
+var person5 = new { Name = "Hassan", Age = 30 };
+var person6 = new { Name = "Fateme", Age = "30" }; // Age string است
+```
+
+### تأثیر بر آرایه
+
+```csharp
+// ❌ خطا - ترتیب Propertyها متفاوت
+var people = new[] {
+    new { Name = "Ali", Age = 30 },
+    new { Age = 25, Name = "Sara" } // ترتیب عوض شده
+};
+
+// ✅ صحیح - همه چیز یکسان
+var people = new[] {
+    new { Name = "Ali", Age = 30 },
+    new { Name = "Sara", Age = 25 }
+};
+```
+
+---
+
+## مثال‌های عملی
+
+### مثال 1: مثال ساده
+
+```csharp
+var products = new[] {
+    new { Name = "Laptop", Price = 1200 }
+};
+
+Console.WriteLine(products[0].Name);  // Laptop
+Console.WriteLine(products[0].Price); // 1200
+```
+
+### مثال 2: چند Object
+
+```csharp
+var employees = new[] {
+    new { Id = 1, Name = "Ali", Department = "IT" },
+    new { Id = 2, Name = "Sara", Department = "HR" },
+    new { Id = 3, Name = "Reza", Department = "IT" }
+};
+
+foreach (var emp in employees)
+{
+    Console.WriteLine($"{emp.Id}: {emp.Name} - {emp.Department}");
+}
+```
+
+### مثال 3: Propertyهای متفاوت (خطا)
+
+```csharp
+// ❌ این کد خطا می‌دهد
+var items = new[] {
+    new { Name = "Product1", Price = 100 },
+    new { Name = "Product2", Discount = 10 } // Property متفاوت
+};
+// Error: No best type found for implicitly-typed array
+```
+
+### مثال 4: ترتیب متفاوت (خطا)
+
+```csharp
+// ❌ این کد خطا می‌دهد
+var data = new[] {
+    new { Id = 1, Name = "Ali" },
+    new { Name = "Sara", Id = 2 } // ترتیب متفاوت
+};
+// Error: No best type found for implicitly-typed array
+```
+
+### مثال 5: استفاده صحیح با ترتیب یکسان
+
+```csharp
+// ✅ صحیح
+var data = new[] {
+    new { Id = 1, Name = "Ali" },
+    new { Id = 2, Name = "Sara" },
+    new { Id = 3, Name = "Reza" }
+};
+```
+
+---
+
+## خطاهای رایج
+
+### خطای 1: آرایه خالی
+
+```csharp
+// ❌ خطا - Compiler نمی‌تواند نوع را تشخیص دهد
+var empty = new[] { };
+
+// ✅ راه‌حل: نوع را مشخص کنید
+var empty = new object[] { };
+```
+
+### خطای 2: Propertyهای متفاوت
+
+```csharp
+// ❌ خطا
+var items = new[] {
+    new { Name = "A" },
+    new { Name = "B", Value = 10 }
+};
+
+// ✅ راه‌حل: همه Propertyها را یکسان کنید
+var items = new[] {
+    new { Name = "A", Value = 0 },
+    new { Name = "B", Value = 10 }
+};
+```
+
+### خطای 3: نوع Property متفاوت
+
+```csharp
+// ❌ خطا
+var numbers = new[] {
+    new { Value = 10 },
+    new { Value = "20" } // string به جای int
+};
+
+// ✅ راه‌حل: نوع یکسان
+var numbers = new[] {
+    new { Value = 10 },
+    new { Value = 20 }
+};
+```
+
+### خطای 4: تلاش برای تغییر نوع
+
+```csharp
+var people = new[] {
+    new { Name = "Ali", Age = 30 }
+};
+
+// ❌ نمی‌توانید نوع جدید اضافه کنید
+// people[1] = new { Name = "Sara", Age = 25, City = "Tehran" };
+```
+
+---
+
+## تفاوت Array و List
+
+### Array با Anonymous Type
+
+```csharp
+var array = new[] {
+    new { Name = "Ali", Age = 30 },
+    new { Name = "Sara", Age = 25 }
+};
+
+// ✅ دسترسی با ایندکس
+Console.WriteLine(array[0].Name);
+
+// ❌ نمی‌توان عنصر جدید اضافه کرد
+// array.Add(new { Name = "Reza", Age = 35 }); // Error
+```
+
+### List با Anonymous Type
+
+```csharp
+// ✅ استفاده از List
+var list = new List<object> {
+    new { Name = "Ali", Age = 30 },
+    new { Name = "Sara", Age = 25 }
+};
+
+// ❌ مشکل: دسترسی به Propertyها نیاز به Cast دارد
+// Console.WriteLine(((dynamic)list[0]).Name); // پیچیده
+```
+
+### راه‌حل بهتر برای List
+
+```csharp
+// ✅ استفاده از LINQ برای ساخت List
+var people = new[] {
+    new { Name = "Ali", Age = 30 },
+    new { Name = "Sara", Age = 25 }
+}.ToList();
+
+// ✅ حالا می‌توانید اضافه کنید
+people.Add(new { Name = "Reza", Age = 35 });
+
+// ✅ دسترسی آسان به Propertyها
+Console.WriteLine(people[0].Name);
+```
+
+### مقایسه
+
+| ویژگی | Array | List |
+|-------|-------|------|
+| اندازه ثابت | ✅ بله | ❌ خیر |
+| اضافه کردن عنصر | ❌ خیر | ✅ بله |
+| دسترسی به Property | ✅ آسان | ✅ آسان (با ToList) |
+| Performance | ✅ سریع‌تر | ⚠️ کمی کندتر |
+
+---
+
+## استفاده در LINQ
+
+Anonymous Type در LINQ بسیار پرکاربرد است:
+
+### مثال 1: Select
+
+```csharp
+var employees = new List<Employee> {
+    new Employee { Id = 1, Name = "Ali", Salary = 5000 },
+    new Employee { Id = 2, Name = "Sara", Salary = 6000 },
+    new Employee { Id = 3, Name = "Reza", Salary = 5500 }
+};
+
+var highEarners = employees
+    .Where(e => e.Salary > 5200)
+    .Select(e => new { e.Name, e.Salary });
+
+foreach (var person in highEarners)
+{
+    Console.WriteLine($"{person.Name}: {person.Salary}");
+}
+```
+
+### مثال 2: Group By
+
+```csharp
+var products = new List<Product> {
+    new Product { Name = "Laptop", Category = "Electronics", Price = 1200 },
+    new Product { Name = "Phone", Category = "Electronics", Price = 800 },
+    new Product { Name = "Shirt", Category = "Clothing", Price = 50 }
+};
+
+var grouped = products
+    .GroupBy(p => p.Category)
+    .Select(g => new {
+        Category = g.Key,
+        Count = g.Count(),
+        AveragePrice = g.Average(p => p.Price)
+    });
+
+foreach (var group in grouped)
+{
+    Console.WriteLine($"{group.Category}: {group.Count} items, Avg: {group.AveragePrice}");
+}
+```
+
+### مثال 3: Join
+
+```csharp
+var orders = new[] {
+    new { OrderId = 1, ProductId = 101, Quantity = 2 },
+    new { OrderId = 2, ProductId = 102, Quantity = 1 }
+};
+
+var products = new[] {
+    new { ProductId = 101, Name = "Laptop", Price = 1200 },
+    new { ProductId = 102, Name = "Mouse", Price = 25 }
+};
+
+var orderDetails = orders.Join(
+    products,
+    o => o.ProductId,
+    p => p.ProductId,
+    (o, p) => new {
+        o.OrderId,
+        ProductName = p.Name,
+        TotalPrice = p.Price * o.Quantity
+    });
+
+foreach (var detail in orderDetails)
+{
+    Console.WriteLine($"Order {detail.OrderId}: {detail.ProductName} - ${detail.TotalPrice}");
+}
+```
+
+---
+
+## مثال‌های واقعی
+
+### مثال 1: گزارش فروش
+
+```csharp
+var sales = new[] {
+    new { Date = "2024-01-15", Product = "Laptop", Amount = 1200 },
+    new { Date = "2024-01-16", Product = "Mouse", Amount = 25 },
+    new { Date = "2024-01-16", Product = "Keyboard", Amount = 45 },
+    new { Date = "2024-01-17", Product = "Laptop", Amount = 1200 }
+};
+
+var dailyReport = sales
+    .GroupBy(s => s.Date)
+    .Select(g => new {
+        Date = g.Key,
+        TotalSales = g.Sum(s => s.Amount),
+        ItemCount = g.Count()
+    })
+    .OrderByDescending(r => r.TotalSales);
+
+foreach (var report in dailyReport)
+{
+    Console.WriteLine($"{report.Date}: ${report.TotalSales} ({report.ItemCount} items)");
+}
+```
+
+### مثال 2: تبدیل داده
+
+```csharp
+var rawData = new[] {
+    new { FirstName = "Ali", LastName = "Ahmadi", BirthYear = 1990 },
+    new { FirstName = "Sara", LastName = "Mohammadi", BirthYear = 1995 }
+};
+
+var transformed = rawData.Select(p => new {
+    FullName = $"{p.FirstName} {p.LastName}",
+    Age = DateTime.Now.Year - p.BirthYear
+});
+
+foreach (var person in transformed)
+{
+    Console.WriteLine($"{person.FullName} - {person.Age} years old");
+}
+```
+
+### مثال 3: DTO موقت
+
+```csharp
+var users = new[] {
+    new { Id = 1, Username = "ali_a", Email = "ali@example.com", IsActive = true },
+    new { Id = 2, Username = "sara_m", Email = "sara@example.com", IsActive = false }
+};
+
+// فقط اطلاعات مورد نیاز را استخراج کنید
+var activeUsers = users
+    .Where(u => u.IsActive)
+    .Select(u => new { u.Id, u.Username });
+
+foreach (var user in activeUsers)
+{
+    Console.WriteLine($"User {user.Id}: {user.Username}");
+}
+```
+
+---
+
+## جمع‌بندی
+
+### نکات کلیدی
+
+1. ✅ **بله، می‌توان Anonymous Type را در آرایه قرار داد** با استفاده از `new[]`
+2. ✅ **Type Inference** به Compiler اجازه می‌دهد نوع آرایه را تشخیص دهد
+3. ✅ **تمام عناصر باید یکسان باشند**: نام، نوع و ترتیب Propertyها
+4. ✅ **اولین عنصر** به عنوان الگو برای تشخیص نوع استفاده می‌شود
+5. ✅ **LINQ** بهترین مکان برای استفاده از Anonymous Type است
+6. ✅ برای **List** از `.ToList()` استفاده کنید
+
+### اشتباهات رایج
+
+- ❌ قرار دادن Propertyهای متفاوت در آرایه
+- ❌ تغییر ترتیب Propertyها
+- ❌ استفاده از انواع مختلف برای Property مشابه
+- ❌ تلاش برای اضافه کردن عنصر به آرایه
+
+### بهترین روش‌ها
+
+- ✅ از `var` برای تعریف آرایه استفاده کنید
+- ✅ ترتیب Propertyها را در همه عناصر یکسان نگه دارید
+- ✅ برای عملیات پویا از `List<T>.ToList()` استفاده کنید
+- ✅ از Anonymous Type برای داده‌های موقت و LINQ استفاده کنید
+
+---
+
+## منابع
+
+برای مطالعه بیشتر به منابع رسمی Microsoft مراجعه کنید:
+
+1. [Anonymous Types - C# Programming Guide](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/anonymous-types)
+2. [Implicitly Typed Arrays - C# Programming Guide](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/arrays/implicitly-typed-arrays)
+3. [LINQ and Anonymous Types](https://learn.microsoft.com/en-us/dotnet/csharp/linq/standard-query-operators/projection-operations)
+4. [Type Inference in C#](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/implicitly-typed-local-variables)
+
+---
+
+**تاریخ آخرین به‌روزرسانی:** August 27, 2026
+
+این مقاله تمام جنبه‌های استفاده از Anonymous Type در آرایه‌ها را پوشش داد. با تمرین و استفاده در پروژه‌های واقعی، تسلط کامل بر این مفهوم را پیدا خواهید کرد.
